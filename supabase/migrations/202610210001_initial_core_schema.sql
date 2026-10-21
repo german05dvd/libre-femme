@@ -123,6 +123,13 @@ language plpgsql
 set search_path = ''
 as $
 begin
+  if tg_op = 'INSERT' then
+    if new.status <> 'draft' then
+      raise exception 'Purchases must be created in draft status';
+    end if;
+    return new;
+  end if;
+
   if old.status in ('received', 'cancelled') then
     raise exception 'Purchases in status % are immutable', old.status;
   end if;
@@ -143,7 +150,7 @@ end;
 $;
 
 create trigger purchases_guard_update
-before update on public.purchases
+before insert or update on public.purchases
 for each row execute function public.guard_purchase_update();
 
 create or replace function public.guard_purchase_item_write()
