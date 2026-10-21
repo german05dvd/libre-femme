@@ -249,6 +249,13 @@ language plpgsql
 set search_path = ''
 as $$
 begin
+  if tg_op = 'INSERT' then
+    if new.status <> 'draft' then
+      raise exception 'Orders must be created in draft status';
+    end if;
+    return new;
+  end if;
+
   if old.status in ('confirmed', 'cancelled') then
     raise exception 'Orders in status % are immutable', old.status;
   end if;
@@ -285,7 +292,7 @@ end;
 $$;
 
 create trigger orders_guard_update
-before update on public.orders
+before insert or update on public.orders
 for each row execute function public.guard_order_update();
 
 create or replace function public.guard_order_item_write()
