@@ -140,37 +140,22 @@ alter table public.suppliers enable row level security;
 alter table public.purchases enable row level security;
 alter table public.purchase_items enable row level security;
 
-create policy products_public_read
-  on public.products for select to anon, authenticated
-  using (status = 'published');
+-- Public access is provided through restricted views below, not base tables.
+-- Authenticated access to base tables is restricted to provisioned admins.
 
 create policy products_admin_all
   on public.products for all to authenticated
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
 
-create policy variants_public_read
-  on public.product_variants for select to anon, authenticated
-  using (
-    is_active and exists (
-      select 1 from public.products p
-      where p.id = product_variants.product_id and p.status = 'published'
-    )
-  );
+-- Public variant access is provided through a restricted view below.
 
 create policy variants_admin_all
   on public.product_variants for all to authenticated
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
 
-create policy images_public_read
-  on public.product_images for select to anon, authenticated
-  using (
-    exists (
-      select 1 from public.products p
-      where p.id = product_images.product_id and p.status = 'published'
-    )
-  );
+-- Public image access is provided through a restricted view below.
 
 create policy images_admin_all
   on public.product_images for all to authenticated
@@ -197,18 +182,41 @@ create policy purchase_items_admin_all
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
 
--- 7. Explicit privileges. Note: RLS does not hide individual columns.
--- Before production, public catalog reads must use a restricted view or
--- column-level grants so SKU, internal weight and other private fields are not exposed.
+-- 7. Restricted public catalog views.
+-- Views are owned by the migration role and intentionally use owner permissions.
+-- They expose only the fields required by the storefront and filter unpublished data.
+create view public.public_catalog_products as
+select id, name, slug, description, category
+from public.products
+where status = 'published';
+
+create view public.public_catalog_variants as
+select v.id, v.product_id, v.size, v.color, v.sale_price
+from public.product_variants v
+join public.products p on p.id = v.product_id
+where v.is_active and p.status = 'published';
+
+create view public.public_catalog_images as
+select i.id, i.product_id, i.storage_path, i.alt_text, i.position
+from public.product_images i
+join public.products p on p.id = i.product_id
+where p.status = 'published';
+
+-- 8. Explicit privileges.
+-- No anonymous privileges on base tables; public reads use restricted views.
 revoke all on public.products, public.product_variants, public.product_images,
   public.profiles, public.suppliers, public.purchases, public.purchase_items
 from anon, authenticated;
 
-grant select on public.products, public.product_variants, public.product_images
-to anon, authenticated;
+revoke all on public.public_catalog_products,
+  public.public_catalog_variants, public.public_catalog_images
+from public, anon, authenticated;
 
-grant insert, update, delete on public.products, public.product_variants,
-  public.product_images to authenticated;
+grant select on public.public_catalog_products,
+  public.public_catalog_variants, public.public_catalog_images to anon;
+
+grant select, insert, update, delete on public.products,
+  public.product_variants, public.product_images to authenticated;
 
 grant select on public.profiles to authenticated;
 
