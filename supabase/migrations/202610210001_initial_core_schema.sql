@@ -159,8 +159,11 @@ begin
     raise exception 'A purchase item cannot be moved to another purchase';
   end if;
 
-  parent_purchase_id := case when tg_op = 'DELETE'
-    then old.purchase_id else new.purchase_id end;
+  if tg_op = 'DELETE' then
+    parent_purchase_id := old.purchase_id;
+  else
+    parent_purchase_id := new.purchase_id;
+  end if;
 
   select p.status into parent_status
   from public.purchases p
