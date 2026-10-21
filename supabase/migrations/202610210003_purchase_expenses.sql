@@ -194,7 +194,7 @@ begin
       if item_row.id = last_item_id then
         allocation_amount := expense_row.amount_usd - allocated_so_far;
       else
-        allocation_amount := round(expense_row.amount_usd * allocation_weight / total_weight, 2);
+        allocation_amount := trunc(expense_row.amount_usd * allocation_weight / total_weight, 2);
         allocated_so_far := allocated_so_far + allocation_amount;
       end if;
 
