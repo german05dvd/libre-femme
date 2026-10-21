@@ -261,6 +261,23 @@ begin
     ) then
       raise exception 'Invalid order status transition: % -> %', old.status, new.status;
     end if;
+
+    -- A direct status update must not bypass confirm_order() and stock deduction.
+    if new.status = 'confirmed' and exists (
+      select 1
+      from public.order_items oi
+      where oi.order_id = old.id
+        and not exists (
+          select 1
+          from public.inventory_movements im
+          where im.source_order_item_id = oi.id
+            and im.variant_id = oi.variant_id
+            and im.quantity_delta = -oi.quantity
+            and im.movement_type = 'sale'
+        )
+    ) then
+      raise exception 'Order confirmation requires a matching stock movement for every item';
+    end if;
   end if;
 
   return new;
