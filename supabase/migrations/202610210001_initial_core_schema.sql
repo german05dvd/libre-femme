@@ -112,7 +112,89 @@ create table public.purchase_items (
 
 create index purchase_items_variant_id_idx on public.purchase_items(variant_id);
 
--- 5. Admin authorization helper. Profile provisioning is a controlled operation.
+-- 5. Purchase history integrity.
+-- Allowed transitions:
+-- draft -> ordered or cancelled
+-- ordered -> received or cancelled
+-- received and cancelled are terminal states.
+create or replace function public.guard_purchase_update()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  if old.status in ('received', 'cancelled') then
+    raise exception 'Purchases in status % are immutable', old.status;
+  end if;
+
+  if new.status is distinct from old.status then
+    if not (
+      (old.status = 'draft' and new.status in ('ordered', 'cancelled'))
+      or
+      (old.status = 'ordered' and new.status in ('received', 'cancelled'))
+    ) then
+      raise exception 'Invalid purchase status transition: % -> %',
+        old.status, new.status;
+    end if;
+  end if;
+
+  return new;
+end;
+$;
+
+create trigger purchases_guard_update
+before update on public.purchases
+for each row execute function public.guard_purchase_update();
+
+create or replace function public.guard_purchase_item_write()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+declare
+  parent_purchase_id uuid;
+  parent_status text;
+begin
+  if tg_op = 'UPDATE' and new.purchase_id is distinct from old.purchase_id then
+    raise exception 'A purchase item cannot be moved to another purchase';
+  end if;
+
+  parent_purchase_id := case when tg_op = 'DELETE'
+    then old.purchase_id else new.purchase_id end;
+
+  select p.status into parent_status
+  from public.purchases p
+  where p.id = parent_purchase_id
+  for update;
+
+  if parent_status is null then
+    raise exception 'Purchase not found for purchase item';
+  end if;
+
+  if parent_status not in ('draft', 'ordered') then
+    raise exception 'Items can only be changed while purchase is draft or ordered';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$;
+
+create trigger purchase_items_guard_insert
+before insert on public.purchase_items
+for each row execute function public.guard_purchase_item_write();
+
+create trigger purchase_items_guard_update
+before update on public.purchase_items
+for each row execute function public.guard_purchase_item_write();
+
+create trigger purchase_items_guard_delete
+before delete on public.purchase_items
+for each row execute function public.guard_purchase_item_write();
+
+-- 6. Admin authorization helper. Profile provisioning is a controlled operation.
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -131,7 +213,7 @@ $$;
 revoke all on function public.is_admin() from public;
 grant execute on function public.is_admin() to authenticated;
 
--- 6. Row-level security
+-- 7. Row-level security
 alter table public.products enable row level security;
 alter table public.product_variants enable row level security;
 alter table public.product_images enable row level security;
@@ -182,7 +264,7 @@ create policy purchase_items_admin_all
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
 
--- 7. Restricted public catalog views.
+-- 8. Restricted public catalog views.
 -- Views are owned by the migration role and intentionally use owner permissions.
 -- They expose only the fields required by the storefront and filter unpublished data.
 create view public.public_catalog_products as
@@ -202,7 +284,7 @@ from public.product_images i
 join public.products p on p.id = i.product_id
 where p.status = 'published';
 
--- 8. Explicit privileges.
+-- 9. Explicit privileges.
 -- No anonymous privileges on base tables; public reads use restricted views.
 revoke all on public.products, public.product_variants, public.product_images,
   public.profiles, public.suppliers, public.purchases, public.purchase_items
