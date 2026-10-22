@@ -34,6 +34,10 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartNotice, setCartNotice] = useState('')
+  const slogans = ['Viste como te sientes.', 'Viste a tu manera.', 'Viste tu libertad.', 'Viste para ti.']
+  const [sloganIndex, setSloganIndex] = useState(0)
+  const [sloganText, setSloganText] = useState('Viste como te sientes.')
+  const [sloganPhase, setSloganPhase] = useState<'hold' | 'erase' | 'type'>('hold')
 
   useEffect(() => {
     if (!cartOpen) return
@@ -100,23 +104,25 @@ function App() {
       </header>
 
       <main>
-        <section className="hero-section" id="inicio">
+        <section className="hero-section hero-editorial" id="inicio">
           <div className="hero-copy">
-            <p className="eyebrow"><span className="eyebrow-line" /> ESTILO CON INTENCIÓN</p>
-            <h1>Viste como<br />te <em>sientes.</em></h1>
-            <p className="hero-description">Piezas que acompañan tu forma de ser. Una selección consciente para expresarte con libertad, todos los días.</p>
-            <a className="button button-dark" href="#coleccion">Descubrir la colección <span aria-hidden="true">↗</span></a>
-            <div className="hero-note"><span className="note-star">✳</span><span>Menos ruido.<br /><strong>Más tú.</strong></span></div>
+            <p className="eyebrow"><span className="eyebrow-line" /> LIBRE FEMME · VESTIR CON LIBERTAD</p>
+            <h1 aria-label={slogans[sloganIndex]}>{sloganText}<span className="type-caret" aria-hidden="true" /></h1>
+            <p className="hero-description">Prendas que hablan de ti. Texturas, formas y detalles elegidos para acompañarte a tu manera.</p>
+            <a className="hero-discover" href="#coleccion">EXPLORAR PRENDAS <span aria-hidden="true">↗</span></a>
+            <div className="hero-edition"><span>01 — 26</span><span>UNA EXPRESIÓN PROPIA</span></div>
           </div>
-          <div className="hero-art" aria-label="Composición editorial de tonos cálidos y siluetas">
-            <div className="art-sun" />
-            <div className="art-shape art-shape-back" />
-            <div className="art-shape art-shape-front" />
-            <div className="art-fabric" />
-            <span className="art-caption">COLECCIÓN / 01</span>
-            <span className="art-index">L.F — 2026</span>
+          <div className="hero-gallery" aria-label="Inspiración editorial LIBRE femme">
+            <figure className="hero-photo hero-photo-main">
+              <img src="https://images.unsplash.com/photo-1539100387613-e6a8b7f0a5e6?auto=format&fit=crop&w=1200&q=85" alt="Inspiración de moda femenina con silueta elegante" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} />
+              <span className="photo-label">LIBRE FEMME / EDITORIAL</span>
+            </figure>
+            <figure className="hero-photo hero-photo-detail">
+              <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=85" alt="Detalles de estilo y prendas femeninas" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} />
+              <span className="photo-detail-index">FORMA · TEXTURA · ACTITUD</span>
+            </figure>
+            <span className="gallery-stamp">VISTE<br /><em>tu esencia</em></span>
           </div>
-          <div className="hero-footer"><span>DISEÑADO PARA TU DÍA A DÍA</span><span>HECHO PARA SER TÚ <span aria-hidden="true">↓</span></span></div>
         </section>
 
         <section className="collection-section section-wrap" id="coleccion">
