@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 type Product = {
@@ -32,6 +32,22 @@ function App() {
   const [cart, setCart] = useState<Record<number, number>>({})
   const [cartOpen, setCartOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [cartNotice, setCartNotice] = useState('')
+
+  useEffect(() => {
+    if (!cartOpen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCartOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [cartOpen])
+
+  useEffect(() => {
+    if (!cartNotice) return
+    const timeout = window.setTimeout(() => setCartNotice(''), 2400)
+    return () => window.clearTimeout(timeout)
+  }, [cartNotice])
 
   const visibleProducts = useMemo(
     () => activeCategory === 'Todo' ? products : products.filter((product) => product.category === activeCategory),
@@ -40,6 +56,11 @@ function App() {
   const cartItems = products.filter((product) => (cart[product.id] ?? 0) > 0)
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
   const cartTotal = cartItems.reduce((sum, product) => sum + product.price * (cart[product.id] ?? 0), 0)
+
+  const addToCart = (product: Product) => {
+    changeQuantity(product.id, 1)
+    setCartNotice(`${product.name} añadida a tu bolsa`)
+  }
 
   const changeQuantity = (productId: number, delta: number) => {
     setCart((current) => {
@@ -60,7 +81,7 @@ function App() {
   const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}` : ''
 
   return (
-    <div className="storefront">
+    <div className="storefront">\n      <div className="sr-only" role="status" aria-live="polite">{cartNotice}</div>\n      {cartNotice && <div className="cart-toast" role="status"><span aria-hidden="true">✓</span>{cartNotice}<button type="button" onClick={() => setCartOpen(true)}>Ver bolsa</button></div>}
       <div className="announcement">Una forma más libre de vestir <span>✳</span> Piezas elegidas para ti</div>
       <header className="site-header">
         <button className="mobile-menu-button" type="button" aria-label="Abrir menú" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>{mobileMenuOpen ? 'Cerrar' : 'Menú'}</button>
@@ -108,12 +129,12 @@ function App() {
           </div>
           <div className="product-grid">
             {visibleProducts.map((product, index) => (
-              <article className="product-card" key={product.id}>
+              <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
                 <div className={`product-art product-art-${product.color}`}>
                   <span className="product-number">0{index + 1}</span>
                   {product.label && <span className="product-label">{product.label}</span>}
                   <div className="garment-shape" aria-hidden="true"><span /></div>
-                  <button className="quick-add" type="button" onClick={() => changeQuantity(product.id, 1)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
+                  <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(product.price)}</span></div>
               </article>
