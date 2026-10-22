@@ -34,7 +34,6 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartNotice, setCartNotice] = useState('')
-  const slogans = ['Viste como te sientes.', 'Viste a tu manera.', 'Viste tu libertad.', 'Viste para ti.']
   const [sloganText, setSloganText] = useState('Viste como te sientes.')
 
   useEffect(() => {
