@@ -29,6 +29,7 @@ function formatPrice(price: number) {
 
 function App() {
   const [activeCategory, setActiveCategory] = useState('Todo')
+  const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState<Record<number, number>>({})
   const [cartOpen, setCartOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -50,8 +51,8 @@ function App() {
   }, [cartNotice])
 
   const visibleProducts = useMemo(
-    () => activeCategory === 'Todo' ? products : products.filter((product) => product.category === activeCategory),
-    [activeCategory],
+    () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
+    [activeCategory, searchTerm],
   )
   const cartItems = products.filter((product) => (cart[product.id] ?? 0) > 0)
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
@@ -124,10 +125,11 @@ function App() {
             <p className="section-intro">Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.</p>
           </div>
           <div className="collection-toolbar">
+            <label className="product-search"><span className="sr-only">Buscar prendas</span><span className="search-icon" aria-hidden="true">⌕</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar una prenda…" /></label>
             <div className="category-filters" role="group" aria-label="Filtrar por categoría">
               {categories.map((category) => <button key={category} type="button" className={activeCategory === category ? 'filter-chip active' : 'filter-chip'} onClick={() => setActiveCategory(category)} aria-pressed={activeCategory === category}>{category}</button>)}
             </div>
-            <span className="product-count">{visibleProducts.length} PIEZAS</span>
+            <span className="product-count">{visibleProducts.length} {visibleProducts.length === 1 ? "PIEZA" : "PIEZAS"}</span>
           </div>
           <div className="product-grid">
             {visibleProducts.map((product, index) => (
@@ -142,6 +144,7 @@ function App() {
               </article>
             ))}
           </div>
+          {visibleProducts.length === 0 && <div className="no-results"><span>✳</span><h3>No encontramos esa pieza.</h3><p>Prueba con otro nombre o cambia los filtros.</p><button className="text-link" type="button" onClick={() => { setSearchTerm(""); setActiveCategory("Todo") }}>Limpiar búsqueda</button></div>}
           <p className="demo-note">Vista de demostración: precios y productos de ejemplo. La disponibilidad real se conectará al inventario.</p>
         </section>
 
