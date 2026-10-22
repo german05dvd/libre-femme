@@ -112,6 +112,38 @@ create table public.purchase_items (
 
 create index purchase_items_variant_id_idx on public.purchase_items(variant_id);
 
+-- Keep modification timestamps consistent at the database layer.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  new.updated_at := now();
+  return new;
+end;
+$;
+
+create trigger products_set_updated_at
+before update on public.products
+for each row execute function public.set_updated_at();
+
+create trigger product_variants_set_updated_at
+before update on public.product_variants
+for each row execute function public.set_updated_at();
+
+create trigger profiles_set_updated_at
+before update on public.profiles
+for each row execute function public.set_updated_at();
+
+create trigger suppliers_set_updated_at
+before update on public.suppliers
+for each row execute function public.set_updated_at();
+
+create trigger purchases_set_updated_at
+before update on public.purchases
+for each row execute function public.set_updated_at();
+
 -- 5. Purchase history integrity.
 -- Allowed transitions:
 -- draft -> ordered or cancelled
