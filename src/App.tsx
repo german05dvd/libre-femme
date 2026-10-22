@@ -130,7 +130,7 @@ function App() {
         <section className="hero-section hero-editorial" id="inicio">
           <div className="hero-copy">
             <p className="eyebrow"><span className="eyebrow-line" /> LIBRE FEMME · VESTIR CON LIBERTAD</p>
-            <h1 aria-label={slogans[sloganIndex]}>{sloganText}<span className="type-caret" aria-hidden="true" /></h1>
+            <h1 aria-label={sloganText}>{sloganText}<span className="type-caret" aria-hidden="true" /></h1>
             <p className="hero-description">Prendas que hablan de ti. Texturas, formas y detalles elegidos para acompañarte a tu manera.</p>
             <a className="hero-discover" href="#coleccion">EXPLORAR PRENDAS <span aria-hidden="true">↗</span></a>
             <div className="hero-edition"><span>01 — 26</span><span>UNA EXPRESIÓN PROPIA</span></div>
