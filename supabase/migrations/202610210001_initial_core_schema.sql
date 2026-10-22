@@ -117,12 +117,12 @@ create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   new.updated_at := now();
   return new;
 end;
-$;
+$$;
 
 create trigger products_set_updated_at
 before update on public.products
