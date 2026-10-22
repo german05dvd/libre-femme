@@ -191,3 +191,39 @@
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .quick-add { opacity: 1; transform: none; }
 }
+
+
+/* Interaction polish: quiet, tactile motion and clearer feedback */
+html { scroll-padding-top: 24px; }
+.button { position: relative; overflow: hidden; }
+.button span { display: inline-block; transition: transform .22s ease; }
+.button:hover span { transform: translate(2px, -2px); }
+.button:active { transform: translateY(1px); }
+.hero-copy { animation: rise-in .7s both; }
+.hero-art { animation: rise-in .85s .12s both; }
+.art-sun { animation: sun-drift 8s ease-in-out infinite alternate; transform-origin: center; }
+.art-shape-back { animation: shape-arrive .9s .2s both; }
+.art-shape-front { animation: shape-arrive .9s .35s both; }
+.art-fabric { animation: fabric-arrive 1s .3s both; }
+.product-card { animation: rise-in .48s both; }
+.product-art { transition: filter .3s ease; }
+.product-card:hover .product-art { filter: saturate(1.06); }
+.garment-shape { transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+.product-card:hover .garment-shape { transform: translateY(-5px) rotate(-1deg); }
+.filter-chip:active, .quick-add:active, .quantity-control button:active { transform: scale(.97); }
+.cart-count { transition: background .2s ease, color .2s ease, border-color .2s ease; }
+.cart-trigger:hover .cart-count { border-color: var(--clay); background: var(--clay); color: white; }
+.cart-toast { position: fixed; z-index: 30; top: 22px; right: 22px; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 32px); padding: 14px 16px; border: 1px solid var(--line); background: #fffdf9; color: var(--chocolate); box-shadow: 0 12px 40px rgba(57,40,31,.13); font-size: 12px; animation: toast-in .25s ease both; }
+.cart-toast > span { display: grid; width: 22px; height: 22px; flex: 0 0 22px; place-items: center; border-radius: 50%; background: #e6eee3; color: #426143; }
+.cart-toast button { padding: 5px 0 5px 10px; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--clay); font-size: 11px; cursor: pointer; }
+.drawer-backdrop { backdrop-filter: blur(3px); }
+.close-drawer { transition: background .2s ease, transform .2s ease; }
+.close-drawer:hover { background: var(--cream); transform: rotate(90deg); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shape-arrive { from { opacity: .5; transform: translateY(18px) rotate(5deg); } to { opacity: 1; } }
+@keyframes fabric-arrive { from { opacity: 0; transform: translate(12px, 20px) rotate(-14deg); } to { opacity: .93; transform: translate(0,0) rotate(-14deg); } }
+@keyframes sun-drift { from { transform: translateY(0); } to { transform: translateY(-9px); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 560px) { .cart-toast { top: 12px; right: 12px; left: 12px; justify-content: space-between; gap: 8px; font-size: 11px; } .hero-art { min-height: 350px; } }
+@media (prefers-reduced-motion: reduce) { .hero-copy, .hero-art, .art-sun, .art-shape-back, .art-shape-front, .art-fabric, .product-card, .cart-toast { animation: none !important; } .garment-shape, .button span, .close-drawer { transition: none !important; } }
