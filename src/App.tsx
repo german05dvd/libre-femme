@@ -81,7 +81,9 @@ function App() {
   const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}` : ''
 
   return (
-    <div className="storefront">\n      <div className="sr-only" role="status" aria-live="polite">{cartNotice}</div>\n      {cartNotice && <div className="cart-toast" role="status"><span aria-hidden="true">✓</span>{cartNotice}<button type="button" onClick={() => setCartOpen(true)}>Ver bolsa</button></div>}
+    <div className="storefront">
+      <div className="sr-only" role="status" aria-live="polite">{cartNotice}</div>
+      {cartNotice && <div className="cart-toast" role="status"><span aria-hidden="true">✓</span>{cartNotice}<button type="button" onClick={() => setCartOpen(true)}>Ver bolsa</button></div>}
       <div className="announcement">Una forma más libre de vestir <span>✳</span> Piezas elegidas para ti</div>
       <header className="site-header">
         <button className="mobile-menu-button" type="button" aria-label="Abrir menú" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>{mobileMenuOpen ? 'Cerrar' : 'Menú'}</button>
