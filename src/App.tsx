@@ -35,9 +35,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartNotice, setCartNotice] = useState('')
   const slogans = ['Viste como te sientes.', 'Viste a tu manera.', 'Viste tu libertad.', 'Viste para ti.']
-  const [sloganIndex, setSloganIndex] = useState(0)
   const [sloganText, setSloganText] = useState('Viste como te sientes.')
-  const [sloganPhase, setSloganPhase] = useState<'hold' | 'erase' | 'type'>('hold')
 
   useEffect(() => {
     if (!cartOpen) return
@@ -53,6 +51,31 @@ function App() {
     const timeout = window.setTimeout(() => setCartNotice(''), 2400)
     return () => window.clearTimeout(timeout)
   }, [cartNotice])
+
+  useEffect(() => {
+    const slogans = ['Viste como te sientes.', 'Viste a tu manera.', 'Viste tu libertad.', 'Viste para ti.']
+    let index = 0
+    let phase: 'hold' | 'erase' | 'type' = 'hold'
+    let position = slogans[0].length
+    let pauseTicks = 0
+    const timer = window.setInterval(() => {
+      if (phase === 'hold') {
+        pauseTicks += 1
+        if (pauseTicks >= 22) { phase = 'erase'; pauseTicks = 0 }
+        return
+      }
+      if (phase === 'erase') {
+        position -= 1
+        setSloganText(slogans[index].slice(0, position))
+        if (position <= 0) { index = (index + 1) % slogans.length; phase = 'type'; position = 0 }
+        return
+      }
+      position += 1
+      setSloganText(slogans[index].slice(0, position))
+      if (position >= slogans[index].length) { phase = 'hold'; pauseTicks = 0 }
+    }, 90)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const visibleProducts = useMemo(
     () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
