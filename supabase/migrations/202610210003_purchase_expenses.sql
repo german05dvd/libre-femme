@@ -15,7 +15,12 @@ create table public.purchase_expenses (
     check (allocation_method in ('purchase_value', 'weight', 'quantity')),
   created_at timestamptz not null default now(),
   constraint purchase_expenses_description_not_blank
-    check (length(trim(description)) > 0)
+    check (length(trim(description)) > 0),
+  constraint purchase_expenses_category_method_check check (
+    (category = 'agency' and allocation_method = 'purchase_value')
+    or (category = 'freight' and allocation_method = 'weight')
+    or category in ('customs', 'other')
+  )
 );
 
 create index purchase_expenses_purchase_id_idx
