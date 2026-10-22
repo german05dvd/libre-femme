@@ -34,6 +34,8 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartNotice, setCartNotice] = useState('')
+  const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({})
+  const [selectedColors, setSelectedColors] = useState<Record<number, string>>({})
   const [sloganText, setSloganText] = useState('Viste como te sientes.')
 
   useEffect(() => {
@@ -86,7 +88,9 @@ function App() {
 
   const addToCart = (product: Product) => {
     changeQuantity(product.id, 1)
-    setCartNotice(`${product.name} añadida a tu bolsa`)
+    const size = selectedSizes[product.id] ?? 'M'
+    const color = selectedColors[product.id] ?? product.color
+    setCartNotice(`${product.name} · talla ${size} · color ${color} añadida a tu bolsa`)
   }
 
   const changeQuantity = (productId: number, delta: number) => {
@@ -149,7 +153,7 @@ function App() {
 
         <section className="collection-section section-wrap" id="coleccion">
           <div className="section-heading">
-            <div><p className="eyebrow">SELECCIÓN LIBRE</p><h2>Piezas para <em>habitarte.</em></h2></div>
+            <div><p className="eyebrow">SELECCIÓN LIBRE</p><h2>Nuestros <em>productos.</em></h2></div>
             <p className="section-intro">Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.</p>
           </div>
           <div className="collection-toolbar">
@@ -162,13 +166,19 @@ function App() {
           <div className="product-grid">
             {visibleProducts.map((product, index) => (
               <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
-                <div className={`product-art product-art-${product.color}`}>
+                <div className={`product-art product-art-${selectedColors[product.id] ?? product.color}`}>
                   <span className="product-number">0{index + 1}</span>
                   {product.label && <span className="product-label">{product.label}</span>}
+                  <span className="availability-note">+10 disponibles</span>
                   <div className="garment-shape" aria-hidden="true"><span /></div>
                   <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(product.price)}</span></div>
+                <div className="product-options">
+                  <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{['S', 'M', 'L', 'XL'].map((size) => <button key={size} type="button" className={`size-option ${(selectedSizes[product.id] ?? 'M') === size ? 'selected' : ''}`} aria-pressed={(selectedSizes[product.id] ?? 'M') === size} onClick={() => setSelectedSizes((current) => ({ ...current, [product.id]: size }))}>{size}</button>)}</div>
+                  <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{['rose', 'chocolate', 'cream'].map((color) => <button key={color} type="button" className={`color-swatch swatch-${color} ${(selectedColors[product.id] ?? product.color) === color ? 'selected' : ''}`} aria-label={`Color ${color}`} aria-pressed={(selectedColors[product.id] ?? product.color) === color} onClick={() => setSelectedColors((current) => ({ ...current, [product.id]: color }))} />)}</div></div>
+                  <button className="product-add-link" type="button" onClick={() => addToCart(product)}>Añadir a la bolsa <span>↗</span></button>
+                </div>
               </article>
             ))}
           </div>
