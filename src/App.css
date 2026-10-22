@@ -227,3 +227,18 @@ html { scroll-padding-top: 24px; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 560px) { .cart-toast { top: 12px; right: 12px; left: 12px; justify-content: space-between; gap: 8px; font-size: 11px; } .hero-art { min-height: 350px; } }
 @media (prefers-reduced-motion: reduce) { .hero-copy, .hero-art, .art-sun, .art-shape-back, .art-shape-front, .art-fabric, .product-card, .cart-toast { animation: none !important; } .garment-shape, .button span, .close-drawer { transition: none !important; } }
+
+
+/* Catalog search */
+.collection-toolbar { flex-wrap: wrap; }
+.product-search { display: flex; align-items: center; gap: 10px; min-width: min(100%, 250px); max-width: 300px; flex: 1 1 220px; padding: 0 0 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.search-icon { font-family: Georgia, serif; font-size: 24px; line-height: 1; }
+.product-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--chocolate); font-size: 12px; }
+.product-search input::placeholder { color: #a79a8f; }
+.product-search:focus-within { border-color: var(--clay); }
+.no-results { display: flex; min-height: 260px; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.no-results > span { color: var(--clay); font-size: 28px; }
+.no-results h3 { margin: 12px 0 4px; font-family: var(--serif); font-size: 26px; font-weight: 400; }
+.no-results p { color: var(--muted); font-size: 12px; }
+.no-results .text-link { margin-top: 12px; border: 0; background: transparent; cursor: pointer; }
+@media (max-width: 560px) { .product-search { max-width: none; flex-basis: 100%; } }
