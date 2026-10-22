@@ -121,7 +121,7 @@ create or replace function public.guard_purchase_update()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   if tg_op = 'INSERT' then
     if new.status <> 'draft' then
@@ -147,7 +147,7 @@ begin
 
   return new;
 end;
-$;
+$$;
 
 create trigger purchases_guard_update
 before insert or update on public.purchases
@@ -157,7 +157,7 @@ create or replace function public.guard_purchase_item_write()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 declare
   parent_purchase_id uuid;
   parent_status text;
@@ -190,7 +190,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 create trigger purchase_items_guard_insert
 before insert on public.purchase_items
