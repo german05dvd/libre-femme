@@ -62,13 +62,12 @@ function AdminLogin({ onSignedIn }: { onSignedIn: () => void }) {
 }
 
 export default function AdminGate() {
-  const [gate, setGate] = useState<GateState>({ status: 'loading' })
+  const [gate, setGate] = useState<GateState>(() =>
+    supabase ? { status: 'loading' } : { status: 'signed-out' },
+  )
 
   useEffect(() => {
-    if (!supabase) {
-      setGate({ status: 'signed-out' })
-      return
-    }
+    if (!supabase) return
 
     let active = true
     let latestCheck = 0
