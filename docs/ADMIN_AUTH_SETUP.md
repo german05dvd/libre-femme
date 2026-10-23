@@ -53,9 +53,16 @@ No ejecutar este SQL antes de desplegar la migración que crea `public.profiles`
 - No hay claves privilegiadas en los archivos servidos al navegador.
 - Las migraciones se prueban en un entorno no productivo antes de aplicarlas al proyecto remoto.
 
+## Estado de implementación del acceso
+
+- Implementados en la rama de trabajo el cliente de Supabase, el formulario de inicio de sesión con contraseña, la comprobación de `profiles.role = 'admin'`, el cierre de sesión y la ruta privada inicial.
+- La tienda pública permanece sin cambios y sigue siendo una demostración desconectada de la base de datos.
+- La dependencia está declarada en `package.json`; el lockfile debe regenerarse con `npm install` en Codespaces antes de integrar o ejecutar `npm ci`.
+- El acceso no debe considerarse validado hasta configurar las variables, aprovisionar el perfil y probar el flujo con cuentas reales.
+
 ## Pendientes técnicos
 
-- Instalar y fijar `@supabase/supabase-js` junto con su lockfile.
-- Implementar el cliente, el formulario de acceso y la protección de rutas.
+- Regenerar y versionar `package-lock.json` con `npm install`.
+- Ejecutar `npm run build` y `npm run lint` en Codespaces y corregir cualquier fallo.
 - Revisar las migraciones con pruebas SQL reales antes de aplicarlas.
 - Conectar el catálogo público a las vistas restringidas y verificar que la interfaz nunca presenta stock de demostración como real.
