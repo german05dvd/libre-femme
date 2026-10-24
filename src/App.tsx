@@ -180,10 +180,10 @@ function App() {
   }
 
   const whatsappMessage = [
-    'Hola, LIBRE femme. Quisiera consultar disponibilidad de estas piezas:',
+    'Hola, le escribo para solicitar un pedido de:',
     ...cartItems.map(({ product, variant, quantity }) => '• ' + product.name + (variant.size ? ' · talla ' + variant.size : '') + (variant.color ? ' · color ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : '') + ' × ' + quantity + ' — ' + formatPrice(variant.sale_price * quantity)),
     `Total estimado: ${formatPrice(cartTotal)} USD`,
-    '¿Me pueden confirmar disponibilidad y detalles de entrega?',
+    '¿Podemos confirmar disponibilidad y detalles de entrega?',
   ].join('\\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
@@ -280,7 +280,7 @@ function App() {
         <div className="drawer-heading"><div><p className="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Tu bolsa <span>({cartCount})</span></h2></div><button className="close-drawer" type="button" onClick={() => setCartOpen(false)} aria-label="Cerrar bolsa">×</button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><span>✳</span><h3>Tu bolsa está esperando.</h3><p>Explora la colección y añade las piezas que más conecten contigo.</p><button className="button button-dark" type="button" onClick={() => { setCartOpen(false); document.getElementById('coleccion')?.scrollIntoView({ behavior: 'smooth' }) }}>Ver colección</button></div> : <>
           <div className="cart-lines">{cartItems.map(({ key, product, variant, quantity }) => <div className="cart-line" key={key}><div className="cart-thumb product-art-cream"><div className="garment-shape" aria-hidden="true"><span /></div></div><div className="cart-line-info"><h3>{product.name}</h3><span>{formatPrice(variant.sale_price)}{variant.size ? ' · Talla ' + variant.size : ''}{variant.color ? ' · ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : ''}</span><div className="quantity-control"><button type="button" aria-label={`Quitar una unidad de ${product.name}`} onClick={() => changeQuantity(key, -1)}>−</button><span>{quantity}</span><button type="button" aria-label={`Añadir una unidad de ${product.name}`} onClick={() => changeQuantity(key, 1)}>+</button></div></div><strong>{formatPrice(variant.sale_price * quantity)}</strong></div>)}</div>
-          <div className="cart-summary"><div><span>Subtotal estimado</span><strong>{formatPrice(cartTotal)} USD</strong></div><p>La disponibilidad, entrega y total final se confirman por WhatsApp. Este envío no reserva existencias.</p><a className="button button-dark checkout-button" href={whatsappUrl} target="_blank" rel="noreferrer">Consultar por WhatsApp <span aria-hidden="true">↗</span></a></div>
+          <div className="cart-summary"><div><span>Subtotal estimado</span><strong>{formatPrice(cartTotal)} USD</strong></div><p>La disponibilidad, entrega y total final se confirman por WhatsApp. Este envío no reserva existencias.</p><a className="button button-dark checkout-button" href={whatsappUrl} target="_blank" rel="noreferrer">Solicitar pedido por WhatsApp <span aria-hidden="true">↗</span></a></div>
         </>}
       </aside></div>}
     </div>
