@@ -145,6 +145,8 @@ join public.products p on p.id = v.product_id
 left join public.order_items oi on oi.id = im.source_order_item_id
 left join public.manual_register_lines mrl on mrl.id = im.manual_register_line_id
 where public.is_admin();
+revoke all on public.admin_inventory_register from public, anon, authenticated;
+grant select on public.admin_inventory_register to authenticated;
 
 commit;
 );
