@@ -91,7 +91,7 @@ export default function AdminPurchases() {
     event.preventDefault()
     if (!supabase || !itemPurchase) return
     setBusy('item'); setError(''); setNotice('')
-    const { error: e } = await supabase.from('purchase_items').insert({ purchase_id: itemPurchase, variant_id: itemVariant, quantity: Number(itemQuantity), unit_cost: Number(itemCost) })
+    const { error: e } = await supabase.from('purchase_items').upsert({ purchase_id: itemPurchase, variant_id: itemVariant, quantity: Number(itemQuantity), unit_cost: Number(itemCost) }, { onConflict: 'purchase_id,variant_id' })
     setBusy('')
     if (e) setError(errorMessage(e, 'No se pudo añadir la línea. Comprueba que no exista ya esa variante en la compra.'))
     else { setItemCost(''); setNotice('Línea añadida a la compra.'); await load() }
@@ -162,7 +162,7 @@ export default function AdminPurchases() {
         <label>Coste unitario (USD)<input required type="number" min="0" step="0.01" value={itemCost} onChange={e => setItemCost(e.target.value)} placeholder="8.50" /></label>
         <button className="admin-submit" type="submit" disabled={busy === 'item' || !itemPurchase || !itemVariant || !itemCost || !selectedItemPurchase || !editablePurchase(selectedItemPurchase)}>{busy === 'item' ? 'Añadiendo…' : 'Añadir línea'}</button>
       </form>
-      <p className="admin-footnote">El esquema admite una sola línea por variante en cada compra. Si necesitas más unidades, aumenta la cantidad de esa línea antes de ordenar.</p>
+      <p className="admin-footnote">Solo se permite una línea por variante y compra. Si ya existe, guarda aquí la cantidad total deseada y el coste unitario actualizado; solo funciona antes de recibir la compra.</p>
     </section>
 
     <section className="admin-section">
