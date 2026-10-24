@@ -17,6 +17,7 @@ type Variant = {
   color: string | null
   sale_price: number
   is_active: boolean
+  weight_lb: number | null
 }
 type Product = {
   id: string
@@ -110,10 +111,9 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const loadProducts = useCallback(async () => {
     if (!supabase) return
     setLoading(true)
-    setError('')
     const { data, error: queryError } = await supabase
       .from('products')
-      .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, sale_price, is_active)')
+      .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, sale_price, is_active, weight_lb)')
       .order('updated_at', { ascending: false })
     if (queryError) setError('No se pudo cargar el catálogo: ' + queryError.message)
     else setProducts((data ?? []) as Product[])
@@ -128,7 +128,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
       id: product.id, variantId: variant?.id ?? '', name: product.name,
       category: product.category ?? '', description: product.description ?? '',
       sku: variant?.sku ?? '', size: variant?.size ?? '', color: variant?.color ?? '',
-      price: variant ? String(variant.sale_price) : '', weight: '',
+      price: variant ? String(variant.sale_price) : '', weight: variant?.weight_lb == null ? '' : String(variant.weight_lb),
     })
     setNotice('')
     setError('')
