@@ -24,7 +24,6 @@ export default function AdminOrders() {
 
   const load = useCallback(async () => {
     if (!supabase) return
-    setLoading(true)
     const [o, v, s] = await Promise.all([
       supabase.from('orders').select('id,status,source,customer_name,customer_phone,notes,created_at,confirmed_at,order_items(id,variant_id,sku_snapshot,product_name_snapshot,size_snapshot,color_snapshot,quantity,unit_sale_price_usd,unit_cost_usd,line_total_usd)').order('created_at', { ascending: false }),
       supabase.from('product_variants').select('id,sku,size,color,sale_price,is_active,products(name)').eq('is_active', true).order('sku'),
