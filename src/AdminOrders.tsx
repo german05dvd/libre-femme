@@ -34,7 +34,9 @@ export default function AdminOrders() {
     else { setOrders((o.data ?? []) as unknown as Order[]); setVariants((v.data ?? []) as unknown as Variant[]); setStock((s.data ?? []) as unknown as Stock[]); setError('') }
     setLoading(false)
   }, [])
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void Promise.resolve().then(load)
+  }, [load])
 
   async function createOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
