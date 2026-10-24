@@ -47,7 +47,7 @@ create index inventory_cost_allocations_sale_idx
 -- also safely handles any pre-existing receipts and sales when this migration runs.
 alter table public.order_items disable trigger order_items_guard_update;
 
-do $
+do $fifo$
 declare
   movement record;
   layer record;
@@ -104,7 +104,7 @@ begin
     end if;
   end loop;
 end;
-$;
+$fifo$;
 
 alter table public.order_items enable trigger order_items_guard_update;
 
