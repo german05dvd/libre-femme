@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import './admin.css'
 import AdminPurchases from './AdminPurchases'
-import AdminOrders from './AdminOrders'
+import AdminManualRegister from './AdminManualRegister'
 import AdminRegister from './AdminRegister'
 
 type GateState =
@@ -18,6 +18,7 @@ type Variant = {
   sku: string
   size: string | null
   color: string | null
+  color_hex: string | null
   sale_price: number
   is_active: boolean
   weight_lb: number | null
@@ -41,12 +42,13 @@ type ProductForm = {
   sku: string
   size: string
   color: string
+  colorHex: string
   price: string
   weight: string
 }
 const emptyForm: ProductForm = {
   id: '', variantId: '', name: '', category: '', description: '',
-  sku: '', size: '', color: '', price: '', weight: '',
+  sku: '', size: '', color: '', colorHex: '#000000', price: '', weight: '',
 }
 
 function slugify(value: string) {
@@ -103,7 +105,7 @@ function AdminLogin({ onSignedIn }: { onSignedIn: () => void }) {
   )
 }
 
-function ProductManagement({ displayName, email, onSignOut }: { displayName: string; email: string; onSignOut: () => void }) {
+function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   const [products, setProducts] = useState<Product[]>([])
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [loading, setLoading] = useState(true)
@@ -113,13 +115,13 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const [uploadingImage, setUploadingImage] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [activeModule, setActiveModule] = useState<'products' | 'purchases' | 'orders' | 'register'>('products')
+  const [activeModule, setActiveModule] = useState<'products' | 'inventory' | 'register' | 'finance'>('products')
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return
     const { data, error: queryError } = await supabase
       .from('products')
-      .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, sale_price, is_active, weight_lb)')
+      .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, color_hex, sale_price, is_active, weight_lb)')
       .order('updated_at', { ascending: false })
     if (queryError) {
       setError('No se pudo cargar el catálogo: ' + queryError.message)
@@ -147,7 +149,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
     setForm({
       id: product.id, variantId: variant?.id ?? '', name: product.name,
       category: product.category ?? '', description: product.description ?? '',
-      sku: variant?.sku ?? '', size: variant?.size ?? '', color: variant?.color ?? '',
+      sku: variant?.sku ?? '', size: variant?.size ?? '', color: variant?.color ?? '', colorHex: variant?.color_hex ?? '#000000',
       price: variant ? String(variant.sale_price) : '', weight: variant?.weight_lb == null ? '' : String(variant.weight_lb),
     })
     setNotice('')
@@ -192,7 +194,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
 
     const variantPayload = {
       product_id: productId, sku: form.sku.trim(), size: form.size.trim() || null,
-      color: form.color.trim() || null, sale_price: Number(form.price),
+      color: form.color.trim() || null, color_hex: form.colorHex.trim() || null, sale_price: Number(form.price),
       weight_lb: form.weight.trim() ? Number(form.weight) : null,
     }
     const variantResult = form.variantId
@@ -306,10 +308,10 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
           <div className="admin-account"><span>{email}</span><button className="admin-signout" type="button" onClick={onSignOut}>Cerrar sesión</button></div>
         </header>
         <p className="admin-eyebrow">GESTIÓN DEL NEGOCIO</p>
-        <h1>Hola, {displayName}.</h1>
+        <h1>Administración.</h1>
         <p className="admin-intro">Administra el catálogo real de LIBRE femme. Los cambios se guardan en Supabase con los permisos de tu cuenta.</p>
         <nav className="admin-module-nav" aria-label="Módulos de administración">
-          <button type="button" className={activeModule === 'products' ? 'active' : ''} onClick={() => setActiveModule('products')}>Productos</button><button type="button" className={activeModule === 'purchases' ? 'active' : ''} onClick={() => setActiveModule('purchases')}>Compras e inventario</button><button type="button" className={activeModule === 'orders' ? 'active' : ''} onClick={() => setActiveModule('orders')}>Pedidos</button><button type="button" className={activeModule === 'register' ? 'active' : ''} onClick={() => setActiveModule('register')}>Registro</button>
+          <button type="button" className={activeModule === 'products' ? 'active' : ''} onClick={() => setActiveModule('products')}>Productos</button><button type="button" className={activeModule === 'register' ? 'active' : ''} onClick={() => setActiveModule('register')}>Registro de movimientos</button><button type="button" className={activeModule === 'inventory' ? 'active' : ''} onClick={() => setActiveModule('inventory')}>Inventario</button><button type="button" className={activeModule === 'finance' ? 'active' : ''} onClick={() => setActiveModule('finance')}>Movimientos de dinero</button>
         </nav>
         {(error || notice) && <p className={error ? 'admin-feedback admin-feedback-error' : 'admin-feedback'} role="status">{error || notice}</p>}
 
@@ -326,7 +328,8 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
             <label>SKU de variante<input required maxLength={100} value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} placeholder="VEST-ALBA-M-ROSE" /></label>
             <label>Precio de venta (USD)<input required type="number" min="0" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="38.00" /></label>
             <label>Talla<input value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} placeholder="M" /></label>
-            <label>Color<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} placeholder="Rosa arcilla" /></label>
+            <label>Nombre del color<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} placeholder="Rosa arcilla" /></label>
+            <label>Código HEX del color<div className="admin-color-control"><input type="color" aria-label="Selector de color" value={/^#[0-9A-Fa-f]{6}$/.test(form.colorHex) ? form.colorHex : '#000000'} onChange={e => setForm({ ...form, colorHex: e.target.value })} /><input value={form.colorHex} pattern="^#[0-9A-Fa-f]{6}$" onChange={e => setForm({ ...form, colorHex: e.target.value })} placeholder="#C58A82" /></div></label>
             <label>Peso (lb, opcional)<input type="number" min="0.001" step="0.001" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="0.350" /></label>
             <div className="admin-field-wide admin-form-actions">
               <button className="admin-submit" type="submit" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Crear producto y variante'} <span aria-hidden="true">↗</span></button>
@@ -383,10 +386,9 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
           )}
         </section>
         </>}
-        {activeModule === 'purchases' && <AdminPurchases />}
-        {activeModule === 'orders' && <AdminOrders />}
-        {activeModule === 'register' && <AdminRegister />}
-        <p className="admin-footnote admin-workspace-footnote">Los módulos de compras, pedidos y registro están disponibles en la navegación superior. La recepción y la confirmación de pedidos registran movimientos reales de stock en Supabase.</p>
+        {activeModule === 'inventory' && <AdminPurchases />}
+        {activeModule === 'register' && <AdminManualRegister />}
+        {activeModule === 'finance' && <AdminRegister />}
         <a className="admin-back-link" href="/">← Volver a la tienda pública</a>
       </section>
     </main>
