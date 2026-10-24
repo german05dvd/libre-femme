@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabase'
 import './admin.css'
 import AdminPurchases from './AdminPurchases'
 import AdminManualRegister from './AdminManualRegister'
+import AdminInventory from './AdminInventory'
 import AdminRegister from './AdminRegister'
 
 type GateState =
@@ -402,7 +403,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
           )}
         </section>
         </>}
-        {activeModule === 'inventory' && <AdminPurchases />}
+        {activeModule === 'inventory' && <AdminInventory />}
         {activeModule === 'register' && <AdminManualRegister />}
         {activeModule === 'finance' && <AdminRegister />}
         <a className="admin-back-link" href="/">← Volver a la tienda pública</a>
