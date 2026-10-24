@@ -7,6 +7,7 @@ type Variant = {
   size: string | null
   color: string | null
   sale_price: number
+  quantity_on_hand: number
 }
 type Product = {
   id: string
@@ -65,7 +66,7 @@ function App() {
         return
       }
       const [{ data: variantRows, error: variantError }, { data: imageRows }] = await Promise.all([
-        client.from('public_catalog_variants').select('id, product_id, size, color, sale_price'),
+        client.from('public_catalog_variants').select('id, product_id, size, color, sale_price, quantity_on_hand'),
         client.from('public_catalog_images').select('id, product_id, storage_path, alt_text, position').order('position'),
       ])
       if (cancelled) return
@@ -92,7 +93,7 @@ function App() {
           description: row.description || 'Una pieza elegida para ti.',
           variants: (variantRows ?? [])
             .filter((variant) => variant.product_id === row.id)
-            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, sale_price: Number(variant.sale_price) })),
+            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, sale_price: Number(variant.sale_price), quantity_on_hand: Number(variant.quantity_on_hand) })),
           images,
         }
       }).filter((product) => product.variants.length > 0)
@@ -165,13 +166,24 @@ function App() {
       return
     }
     const key = product.id + '::' + variant.id
+    if (variant.quantity_on_hand < 1) {
+      setCartNotice('Esta variante está agotada por el momento.')
+      return
+    }
+    if ((cart[key] ?? 0) >= variant.quantity_on_hand) {
+      setCartNotice('Ya tienes en tu bolsa todas las unidades disponibles de esta variante.')
+      return
+    }
     changeQuantity(key, 1)
     setCartNotice(product.name + ' · ' + [variant.size && 'talla ' + variant.size, variant.color && (colorNames[variant.color.toLowerCase()] ?? variant.color)].filter(Boolean).join(' · ') + ' añadida a tu bolsa')
   }
 
   const changeQuantity = (key: string, delta: number) => {
     setCart((current) => {
-      const nextQuantity = Math.max(0, (current[key] ?? 0) + delta)
+      const [productId, variantId] = key.split('::')
+      const variant = products.find(product => product.id === productId)?.variants.find(item => item.id === variantId)
+      const maxQuantity = variant?.quantity_on_hand ?? 0
+      const nextQuantity = Math.min(maxQuantity, Math.max(0, (current[key] ?? 0) + delta))
       const next = { ...current }
       if (nextQuantity === 0) delete next[key]
       else next[key] = nextQuantity
@@ -180,10 +192,10 @@ function App() {
   }
 
   const whatsappMessage = [
-    'Hola, LIBRE femme. Quisiera consultar disponibilidad de estas piezas:',
+    'Hola, le escribo para solicitar un pedido de:',
     ...cartItems.map(({ product, variant, quantity }) => '• ' + product.name + (variant.size ? ' · talla ' + variant.size : '') + (variant.color ? ' · color ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : '') + ' × ' + quantity + ' — ' + formatPrice(variant.sale_price * quantity)),
     `Total estimado: ${formatPrice(cartTotal)} USD`,
-    '¿Me pueden confirmar disponibilidad y detalles de entrega?',
+    '¿Podemos confirmar disponibilidad y detalles de entrega?',
   ].join('\\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
@@ -255,7 +267,7 @@ function App() {
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
                   {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
-                  <button className="product-add-link" type="button" onClick={() => addToCart(product)}>Añadir a la bolsa <span>↗</span></button>
+                  <p className="variant-stock-note">{selectedVariant.quantity_on_hand > 0 ? `${selectedVariant.quantity_on_hand} disponibles` : "Agotado por el momento"}</p><button className="product-add-link" type="button" disabled={selectedVariant.quantity_on_hand < 1} onClick={() => addToCart(product)}>{selectedVariant.quantity_on_hand > 0 ? "Añadir a la bolsa" : "Agotado"} <span>↗</span></button>
                 </div>
               </article>
             })}
@@ -280,7 +292,7 @@ function App() {
         <div className="drawer-heading"><div><p className="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Tu bolsa <span>({cartCount})</span></h2></div><button className="close-drawer" type="button" onClick={() => setCartOpen(false)} aria-label="Cerrar bolsa">×</button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><span>✳</span><h3>Tu bolsa está esperando.</h3><p>Explora la colección y añade las piezas que más conecten contigo.</p><button className="button button-dark" type="button" onClick={() => { setCartOpen(false); document.getElementById('coleccion')?.scrollIntoView({ behavior: 'smooth' }) }}>Ver colección</button></div> : <>
           <div className="cart-lines">{cartItems.map(({ key, product, variant, quantity }) => <div className="cart-line" key={key}><div className="cart-thumb product-art-cream"><div className="garment-shape" aria-hidden="true"><span /></div></div><div className="cart-line-info"><h3>{product.name}</h3><span>{formatPrice(variant.sale_price)}{variant.size ? ' · Talla ' + variant.size : ''}{variant.color ? ' · ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : ''}</span><div className="quantity-control"><button type="button" aria-label={`Quitar una unidad de ${product.name}`} onClick={() => changeQuantity(key, -1)}>−</button><span>{quantity}</span><button type="button" aria-label={`Añadir una unidad de ${product.name}`} onClick={() => changeQuantity(key, 1)}>+</button></div></div><strong>{formatPrice(variant.sale_price * quantity)}</strong></div>)}</div>
-          <div className="cart-summary"><div><span>Subtotal estimado</span><strong>{formatPrice(cartTotal)} USD</strong></div><p>La disponibilidad, entrega y total final se confirman por WhatsApp. Este envío no reserva existencias.</p><a className="button button-dark checkout-button" href={whatsappUrl} target="_blank" rel="noreferrer">Consultar por WhatsApp <span aria-hidden="true">↗</span></a></div>
+          <div className="cart-summary"><div><span>Subtotal estimado</span><strong>{formatPrice(cartTotal)} USD</strong></div><p>La disponibilidad, entrega y total final se confirman por WhatsApp. Este envío no reserva existencias.</p><a className="button button-dark checkout-button" href={whatsappUrl} target="_blank" rel="noreferrer">Solicitar pedido por WhatsApp <span aria-hidden="true">↗</span></a></div>
         </>}
       </aside></div>}
     </div>

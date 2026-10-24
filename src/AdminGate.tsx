@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabase'
 import './admin.css'
 import AdminPurchases from './AdminPurchases'
 import AdminOrders from './AdminOrders'
+import AdminRegister from './AdminRegister'
 
 type GateState =
   | { status: 'loading' }
@@ -112,7 +113,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const [uploadingImage, setUploadingImage] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [activeModule, setActiveModule] = useState<'products' | 'purchases' | 'orders'>('products')
+  const [activeModule, setActiveModule] = useState<'products' | 'purchases' | 'orders' | 'register'>('products')
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return
@@ -308,7 +309,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
         <h1>Hola, {displayName}.</h1>
         <p className="admin-intro">Administra el catálogo real de LIBRE femme. Los cambios se guardan en Supabase con los permisos de tu cuenta.</p>
         <nav className="admin-module-nav" aria-label="Módulos de administración">
-          <button type="button" className={activeModule === 'products' ? 'active' : ''} onClick={() => setActiveModule('products')}>Productos</button><button type="button" className={activeModule === 'purchases' ? 'active' : ''} onClick={() => setActiveModule('purchases')}>Compras e inventario</button><button type="button" className={activeModule === 'orders' ? 'active' : ''} onClick={() => setActiveModule('orders')}>Pedidos</button>
+          <button type="button" className={activeModule === 'products' ? 'active' : ''} onClick={() => setActiveModule('products')}>Productos</button><button type="button" className={activeModule === 'purchases' ? 'active' : ''} onClick={() => setActiveModule('purchases')}>Compras e inventario</button><button type="button" className={activeModule === 'orders' ? 'active' : ''} onClick={() => setActiveModule('orders')}>Pedidos</button><button type="button" className={activeModule === 'register' ? 'active' : ''} onClick={() => setActiveModule('register')}>Registro</button>
         </nav>
         {(error || notice) && <p className={error ? 'admin-feedback admin-feedback-error' : 'admin-feedback'} role="status">{error || notice}</p>}
 
@@ -384,7 +385,8 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
         </>}
         {activeModule === 'purchases' && <AdminPurchases />}
         {activeModule === 'orders' && <AdminOrders />}
-        <p className="admin-footnote admin-workspace-footnote">Los módulos de compras, inventario y pedidos están disponibles en la navegación superior. La recepción y la confirmación de pedidos registran movimientos reales de stock en Supabase.</p>
+        {activeModule === 'register' && <AdminRegister />}
+        <p className="admin-footnote admin-workspace-footnote">Los módulos de compras, pedidos y registro están disponibles en la navegación superior. La recepción y la confirmación de pedidos registran movimientos reales de stock en Supabase.</p>
         <a className="admin-back-link" href="/">← Volver a la tienda pública</a>
       </section>
     </main>
