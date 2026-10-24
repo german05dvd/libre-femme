@@ -1,6 +1,6 @@
 begin;
 
-select plan(20);
+select plan(28);
 
 select has_table('public', 'products', 'products table exists');
 select has_table('public', 'purchase_items', 'purchase items table exists');
@@ -65,6 +65,23 @@ select ok(not has_table_privilege('anon', 'public.inventory_stock', 'SELECT'),
   'anonymous users cannot read inventory balances');
 select ok(not has_table_privilege('anon', 'public.inventory_movements', 'SELECT'),
   'anonymous users cannot read inventory movements');
+
+select ok(has_table_privilege('authenticated', 'public.orders', 'SELECT'),
+  'authenticated role has table SELECT on orders; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.orders', 'INSERT'),
+  'authenticated role has table INSERT on orders; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.orders', 'UPDATE'),
+  'authenticated role has table UPDATE on orders; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.orders', 'DELETE'),
+  'authenticated role has table DELETE on orders; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.order_items', 'SELECT'),
+  'authenticated role has table SELECT on order items; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.order_items', 'INSERT'),
+  'authenticated role has table INSERT on order items; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.inventory_stock', 'SELECT'),
+  'authenticated role can query inventory balances; RLS still filters rows');
+select ok(has_table_privilege('authenticated', 'public.inventory_movements', 'SELECT'),
+  'authenticated role can query inventory ledger; RLS still filters rows');
 
 select * from finish();
 rollback;
