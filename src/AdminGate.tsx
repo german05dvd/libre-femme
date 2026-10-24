@@ -262,7 +262,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
         </>}
         {activeModule === 'purchases' && <AdminPurchases />}
         {activeModule === 'orders' && <AdminOrders />}
-        <p className="admin-footnote admin-workspace-footnote">Productos conectados a Supabase. Compras, recepción, stock y pedidos serán el siguiente bloque; no se muestran como operativos hasta implementarlos.</p>
+        <p className="admin-footnote admin-workspace-footnote">Los módulos de compras, inventario y pedidos están disponibles en la navegación superior. La recepción y la confirmación de pedidos registran movimientos reales de stock en Supabase.</p>
         <a className="admin-back-link" href="/">← Volver a la tienda pública</a>
       </section>
     </main>
