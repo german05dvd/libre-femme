@@ -60,7 +60,7 @@ export default function AdminRegister() {
     setLoading(false)
   }, [month])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
 
   const summary = useMemo(() => movements.reduce((totals, movement) => {
     const amount = Number(movement.total_usd ?? 0)
