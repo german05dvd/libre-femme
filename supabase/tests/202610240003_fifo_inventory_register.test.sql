@@ -1,10 +1,11 @@
 begin;
 
-select plan(9);
+select plan(10);
 
 select has_table('public', 'inventory_cost_layers', 'FIFO cost layers table exists');
 select has_table('public', 'inventory_cost_allocations', 'per-sale FIFO allocations table exists');
 select has_view('public', 'admin_inventory_register', 'admin movement register view exists');
+select has_column('public', 'public_catalog_variants', 'quantity_on_hand', 'public catalog exposes ledger-derived variant stock');
 
 select ok(
   (select c.relrowsecurity from pg_class c
