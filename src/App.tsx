@@ -50,9 +50,10 @@ function App() {
         setLoading(false)
         return
       }
+      const client = supabase
       setLoading(true)
       setCatalogError('')
-      const { data: productRows, error: productError } = await supabase
+      const { data: productRows, error: productError } = await client
         .from('public_catalog_products')
         .select('id, name, slug, description, category')
         .order('name')
@@ -64,8 +65,8 @@ function App() {
         return
       }
       const [{ data: variantRows, error: variantError }, { data: imageRows }] = await Promise.all([
-        supabase.from('public_catalog_variants').select('id, product_id, size, color, sale_price'),
-        supabase.from('public_catalog_images').select('id, product_id, storage_path, alt_text, position').order('position'),
+        client.from('public_catalog_variants').select('id, product_id, size, color, sale_price'),
+        client.from('public_catalog_images').select('id, product_id, storage_path, alt_text, position').order('position'),
       ])
       if (cancelled) return
       if (variantError) {
@@ -79,7 +80,7 @@ function App() {
         const imageUrl = imagePath
           ? imagePath.startsWith('https://') || imagePath.startsWith('http://')
             ? imagePath
-            : supabase.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
+            : client.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
           : undefined
         return {
           id: row.id,
