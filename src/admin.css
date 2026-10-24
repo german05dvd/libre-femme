@@ -252,3 +252,15 @@
   .admin-module-nav button { flex: 1; }
   .admin-module-disabled { display: none; }
 }
+
+
+/* Product image management */
+.admin-image-manager { margin-top: 24px; padding: 18px; border: 1px solid var(--line); background: #fffefa; }
+.admin-image-manager h3 { margin: 4px 0 0; font-family: var(--serif); font-size: 22px; font-weight: 400; }
+.admin-image-upload { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.admin-image-upload label { display: grid; gap: 7px; color: var(--chocolate); font-size: 11px; font-weight: 600; }
+.admin-image-upload input { max-width: 100%; color: var(--muted); font: inherit; font-size: 11px; }
+.admin-image-list { margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.admin-image-list li { display: grid; gap: 5px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
+.admin-image-list small { color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 520px) { .admin-image-upload { align-items: stretch; flex-direction: column; } }
