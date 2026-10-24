@@ -199,7 +199,12 @@ select
        else im.unit_cost_usd end as unit_price_usd,
   case when im.movement_type = 'sale' then oi.line_total_usd
        else abs(im.quantity_delta) * im.unit_cost_usd end as total_usd,
-  im.unit_cost_usd as unit_cost_usd,
+  case when im.movement_type = 'sale' then oi.unit_cost_usd else im.unit_cost_usd end as unit_cost_usd,
+  case when im.movement_type = 'sale' then (
+    select round(sum(a.quantity * a.unit_cost_usd), 2)
+    from public.inventory_cost_allocations a
+    where a.sale_movement_id = im.id
+  ) else null end as cost_of_sale_usd,
   oi.unit_sale_price_usd as unit_sale_price_usd,
   im.note,
   im.source_order_item_id,
