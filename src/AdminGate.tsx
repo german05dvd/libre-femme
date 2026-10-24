@@ -29,6 +29,7 @@ type Product = {
   category: string | null
   status: ProductStatus
   product_variants: Variant[]
+  product_images?: { id: string; storage_path: string; alt_text: string | null; position: number }[]
 }
 type ProductForm = {
   id: string
@@ -107,6 +108,8 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [busyProduct, setBusyProduct] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [activeModule, setActiveModule] = useState<'products' | 'purchases' | 'orders'>('products')
@@ -117,8 +120,20 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
       .from('products')
       .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, sale_price, is_active, weight_lb)')
       .order('updated_at', { ascending: false })
-    if (queryError) setError('No se pudo cargar el catálogo: ' + queryError.message)
-    else setProducts((data ?? []) as Product[])
+    if (queryError) {
+      setError('No se pudo cargar el catálogo: ' + queryError.message)
+    } else {
+      const { data: images, error: imageError } = await supabase
+        .from('product_images')
+        .select('id, product_id, storage_path, alt_text, position')
+        .order('position')
+      if (imageError) setError('Se cargaron los productos, pero no las imágenes: ' + imageError.message)
+      const imageRows = images ?? []
+      setProducts((data ?? []).map((product) => ({
+        ...(product as Product),
+        product_images: imageRows.filter((image) => image.product_id === product.id),
+      })))
+    }
     setLoading(false)
   }, [])
 
@@ -194,6 +209,38 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
     await loadProducts()
   }
 
+  async function uploadProductImage() {
+    if (!supabase || !form.id || !imageFile) return
+    setUploadingImage(true)
+    setError('')
+    setNotice('')
+    const extension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const storagePath = `${form.id}/${crypto.randomUUID()}.${extension}`
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(storagePath, imageFile, { contentType: imageFile.type, upsert: false })
+    if (uploadError) {
+      setError('No se pudo subir la imagen: ' + uploadError.message)
+      setUploadingImage(false)
+      return
+    }
+    const { error: recordError } = await supabase.from('product_images').insert({
+      product_id: form.id,
+      storage_path: storagePath,
+      alt_text: form.name.trim() || null,
+      position: 0,
+    })
+    if (recordError) {
+      setError('La imagen se subió, pero no se pudo asociar al producto: ' + recordError.message)
+      setUploadingImage(false)
+      return
+    }
+    setImageFile(null)
+    setNotice('Imagen subida y asociada al producto.')
+    setUploadingImage(false)
+    await loadProducts()
+  }
+
   async function setProductStatus(product: Product, status: ProductStatus) {
     if (!supabase) return
     setBusyProduct(product.id)
@@ -243,6 +290,30 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
               <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos.</p>
             </div>
           </form>
+          {form.id && (
+            <div className="admin-image-manager">
+              <div className="admin-section-heading">
+                <div><p className="admin-kicker">IMAGEN DEL PRODUCTO</p><h3>Fotografías</h3></div>
+              </div>
+              <p className="admin-footnote">Formatos admitidos: JPEG, PNG, WebP o AVIF. Tamaño máximo: 10 MB. Guarda primero el producto antes de subir imágenes.</p>
+              <div className="admin-image-upload">
+                <label>Elegir imagen
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setImageFile(event.target.files?.[0] ?? null)} />
+                </label>
+                <button className="admin-secondary" type="button" disabled={!imageFile || uploadingImage} onClick={() => void uploadProductImage()}>{uploadingImage ? 'Subiendo…' : 'Subir y asociar imagen'}</button>
+              </div>
+              {(products.find(product => product.id === form.id)?.product_images ?? []).length > 0 && (
+                <ul className="admin-image-list">
+                  {(products.find(product => product.id === form.id)?.product_images ?? []).map(image => (
+                    <li key={image.id}>
+                      <span>{image.alt_text || image.storage_path.split('/').pop()}</span>
+                      <small>{image.storage_path}</small>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="admin-section" aria-labelledby="product-list-title">
