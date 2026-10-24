@@ -132,3 +132,54 @@
   .admin-panel, .admin-dashboard { padding: 26px 22px; }
   .admin-dashboard-header { align-items: flex-start; flex-direction: column; }
 }
+
+
+/* Functional admin workspace */
+.admin-workspace { width: min(100%, 1120px); }
+.admin-account { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 11px; }
+.admin-module-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 30px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.admin-module-nav span { padding: 9px 12px; border: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+.admin-module-nav span.active { border-color: var(--chocolate); background: var(--chocolate); color: #fff8f0; }
+.admin-feedback { margin: 18px 0; padding: 12px 14px; border: 1px solid #9aa98b; background: #f4f7ef; color: #35452c; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-feedback-error { border-color: #d5a19a; background: #fff4f1; color: #8c2f25; }
+.admin-section { margin-top: 28px; padding: clamp(18px, 3vw, 30px); border: 1px solid var(--line); background: #fffefa; }
+.admin-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.admin-section-heading h2 { margin: 4px 0 0; font-family: var(--serif); font-size: clamp(25px, 4vw, 34px); font-weight: 400; letter-spacing: -.03em; }
+.admin-kicker { margin: 0; color: var(--clay); font-size: 9px; letter-spacing: .17em; }
+.admin-product-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.admin-product-form label { display: grid; gap: 7px; color: var(--chocolate); font-size: 11px; font-weight: 600; }
+.admin-product-form input, .admin-product-form textarea { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 0; background: var(--ivory); color: var(--chocolate); font: inherit; font-weight: 400; }
+.admin-product-form input { min-height: 44px; }
+.admin-product-form textarea { resize: vertical; line-height: 1.6; }
+.admin-product-form input:focus, .admin-product-form textarea:focus { outline: 2px solid var(--clay); outline-offset: 1px; }
+.admin-field-wide { grid-column: 1 / -1; }
+.admin-form-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.admin-form-actions .admin-submit { min-width: min(100%, 270px); }
+.admin-secondary { padding: 9px 11px; border: 1px solid var(--line); background: transparent; color: var(--chocolate); font-size: 10px; cursor: pointer; white-space: nowrap; }
+.admin-secondary:hover:not(:disabled) { border-color: var(--chocolate); }
+.admin-secondary:disabled { opacity: .45; cursor: not-allowed; }
+.admin-danger-action { color: #8c2f25; }
+.admin-empty { padding: 20px 0; color: var(--muted); font-size: 12px; }
+.admin-product-list { border-top: 1px solid var(--line); }
+.admin-product-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.admin-product-main { min-width: 0; }
+.admin-product-title-line { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.admin-product-title-line h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.admin-product-main p { margin: 7px 0 4px; color: var(--muted); font-size: 11px; }
+.admin-product-main small { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+.admin-status { padding: 4px 7px; border: 1px solid var(--line); font-size: 9px; letter-spacing: .04em; }
+.admin-status-published { border-color: #a7b99b; color: #405638; }
+.admin-status-draft { color: #856a35; }
+.admin-status-archived { color: var(--muted); }
+.admin-product-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.admin-workspace-footnote { margin-top: 24px; }
+@media (max-width: 720px) {
+  .admin-product-row { align-items: flex-start; flex-direction: column; }
+  .admin-product-actions { justify-content: flex-start; }
+  .admin-account { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 520px) {
+  .admin-product-form { grid-template-columns: 1fr; }
+  .admin-field-wide { grid-column: auto; }
+  .admin-section-heading { align-items: flex-start; }
+}
