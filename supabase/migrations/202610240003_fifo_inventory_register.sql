@@ -34,7 +34,9 @@ create index inventory_cost_allocations_sale_idx
 
 -- Reconstruct cost layers from the immutable ledger in chronological order. This
 -- also safely handles any pre-existing receipts and sales when this migration runs.
-do $$
+alter table public.order_items disable trigger order_items_guard_update;
+
+do $
 declare
   movement record;
   layer record;
@@ -91,7 +93,9 @@ begin
     end if;
   end loop;
 end;
-$$;
+$;
+
+alter table public.order_items enable trigger order_items_guard_update;
 
 -- Every future stock-in creates a FIFO layer. Every stock-out consumes oldest
 -- remaining layers and records exact per-layer cost allocations.
