@@ -14,6 +14,7 @@ type Movement = {
   unit_price_usd: number | null
   total_usd: number | null
   unit_cost_usd: number
+  cost_of_sale_usd: number | null
   unit_sale_price_usd: number | null
   note: string | null
 }
@@ -45,7 +46,7 @@ export default function AdminRegister() {
     const end = new Date(year, monthNumber, 1).toISOString()
     const { data, error: queryError } = await supabase
       .from('admin_inventory_register')
-      .select('id,created_at,movement_type,action,product_name,sku,size,color,quantity,unit_price_usd,total_usd,unit_cost_usd,unit_sale_price_usd,note')
+      .select('id,created_at,movement_type,action,product_name,sku,size,color,quantity,unit_price_usd,total_usd,unit_cost_usd,cost_of_sale_usd,unit_sale_price_usd,note')
       .gte('created_at', new Date(start).toISOString())
       .lt('created_at', end)
       .order('created_at', { ascending: false })
@@ -65,7 +66,7 @@ export default function AdminRegister() {
     const amount = Number(movement.total_usd ?? 0)
     if (movement.movement_type === 'sale') {
       totals.sales += amount
-      totals.costOfSales += Number(movement.unit_cost_usd) * Number(movement.quantity)
+      totals.costOfSales += Number(movement.cost_of_sale_usd ?? (Number(movement.unit_cost_usd) * Number(movement.quantity)))
     }
     if (movement.movement_type === 'purchase_receipt') totals.purchases += amount
     return totals
