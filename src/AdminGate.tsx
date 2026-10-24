@@ -122,7 +122,9 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
     setLoading(false)
   }, [])
 
-  useEffect(() => { void loadProducts() }, [loadProducts])
+  useEffect(() => {
+    void Promise.resolve().then(loadProducts)
+  }, [loadProducts])
 
   function editProduct(product: Product) {
     const variant = product.product_variants?.[0]
