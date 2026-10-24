@@ -57,7 +57,9 @@ export default function AdminPurchases() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void Promise.resolve().then(load)
+  }, [load])
 
   async function addSupplier(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
