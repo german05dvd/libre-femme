@@ -1,6 +1,6 @@
 begin;
 
-select plan(27);
+select plan(28);
 
 select has_table('public', 'products', 'products table exists');
 select has_table('public', 'purchase_items', 'purchase items table exists');
