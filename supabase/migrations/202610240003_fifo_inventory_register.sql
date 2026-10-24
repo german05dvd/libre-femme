@@ -45,8 +45,6 @@ create index inventory_cost_allocations_sale_idx
 
 -- Reconstruct cost layers from the immutable ledger in chronological order. This
 -- also safely handles any pre-existing receipts and sales when this migration runs.
-alter table public.order_items disable trigger order_items_guard_update;
-
 do $fifo$
 declare
   movement record;
@@ -92,21 +90,10 @@ begin
         raise exception 'Cannot reconstruct FIFO cost for movement %: missing % units',
           movement.id, remaining_to_consume;
       end if;
-      if movement.source_order_item_id is not null then
-        update public.order_items oi
-        set unit_cost_usd = (
-          select round(sum(a.quantity * a.unit_cost_usd) / nullif(sum(a.quantity), 0), 4)
-          from public.inventory_cost_allocations a
-          where a.sale_movement_id = movement.id
-        )
-        where oi.id = movement.source_order_item_id;
-      end if;
     end if;
   end loop;
 end;
 $fifo$;
-
-alter table public.order_items enable trigger order_items_guard_update;
 
 -- Every future stock-in creates a FIFO layer. Every stock-out consumes oldest
 -- remaining layers and records exact per-layer cost allocations.
@@ -157,15 +144,6 @@ begin
       new.id, remaining_to_consume;
   end if;
 
-  if new.source_order_item_id is not null then
-    update public.order_items oi
-    set unit_cost_usd = (
-      select round(sum(a.quantity * a.unit_cost_usd) / nullif(sum(a.quantity), 0), 4)
-      from public.inventory_cost_allocations a
-      where a.sale_movement_id = new.id
-    )
-    where oi.id = new.source_order_item_id;
-  end if;
 
   return new;
 end;
