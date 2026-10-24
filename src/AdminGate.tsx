@@ -113,7 +113,6 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return
-    setLoading(true)
     const { data, error: queryError } = await supabase
       .from('products')
       .select('id, name, slug, description, category, status, product_variants(id, sku, size, color, sale_price, is_active, weight_lb)')
