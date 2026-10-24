@@ -4,6 +4,17 @@
 
 begin;
 
+-- Public catalog shows the live, ledger-derived stock per variant.
+create or replace view public.public_catalog_variants as
+select v.id, v.product_id, v.size, v.color, v.sale_price,
+  coalesce(s.quantity_on_hand, 0) as quantity_on_hand
+from public.product_variants v
+join public.products p on p.id = v.product_id
+left join public.inventory_stock s on s.variant_id = v.id
+where v.is_active and p.status = 'published';
+
+grant select on public.public_catalog_variants to anon;
+
 create table public.inventory_cost_layers (
   id uuid primary key default gen_random_uuid(),
   variant_id uuid not null references public.product_variants(id) on delete restrict,
