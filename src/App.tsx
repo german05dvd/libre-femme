@@ -76,8 +76,10 @@ function App() {
       const nextProducts: Product[] = (productRows ?? []).map((row) => {
         const image = (imageRows ?? []).find((item) => item.product_id === row.id)
         const imagePath = image?.storage_path as string | undefined
-        const imageUrl = imagePath?.startsWith('https://') || imagePath?.startsWith('http://')
-          ? imagePath
+        const imageUrl = imagePath
+          ? imagePath.startsWith('https://') || imagePath.startsWith('http://')
+            ? imagePath
+            : supabase.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
           : undefined
         return {
           id: row.id,
