@@ -15,8 +15,7 @@ type Product = {
   category: string
   description: string
   variants: Variant[]
-  imageUrl?: string
-  imageAlt?: string
+  images: { url: string; alt: string }[]
 }
 type CartLine = { key: string; product: Product; variant: Variant; quantity: number }
 
@@ -38,6 +37,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartNotice, setCartNotice] = useState('')
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
+  const [selectedProductImages, setSelectedProductImages] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [sloganText, setSloganText] = useState('Viste como te sientes.')
@@ -75,13 +75,15 @@ function App() {
         return
       }
       const nextProducts: Product[] = (productRows ?? []).map((row) => {
-        const image = (imageRows ?? []).find((item) => item.product_id === row.id)
-        const imagePath = image?.storage_path as string | undefined
-        const imageUrl = imagePath
-          ? imagePath.startsWith('https://') || imagePath.startsWith('http://')
-            ? imagePath
-            : client.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
-          : undefined
+        const images = (imageRows ?? [])
+          .filter((item) => item.product_id === row.id)
+          .map((image) => {
+            const imagePath = image.storage_path as string
+            const url = imagePath.startsWith('https://') || imagePath.startsWith('http://')
+              ? imagePath
+              : client.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
+            return { url, alt: image.alt_text || row.name }
+          })
         return {
           id: row.id,
           name: row.name,
@@ -91,8 +93,7 @@ function App() {
           variants: (variantRows ?? [])
             .filter((variant) => variant.product_id === row.id)
             .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, sale_price: Number(variant.sale_price) })),
-          imageUrl,
-          imageAlt: image?.alt_text || row.name,
+          images,
         }
       }).filter((product) => product.variants.length > 0)
       setProducts(nextProducts)
@@ -237,9 +238,19 @@ function App() {
               return <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
                 <div className={`product-art product-art-${visualColor}`}>
                   <span className="product-number">{String(index + 1).padStart(2, '0')}</span>
-                  {product.imageUrl ? <img className="catalog-product-image" src={product.imageUrl} alt={product.imageAlt || product.name} loading="lazy" /> : <div className="garment-shape" aria-hidden="true"><span /></div>}
+                  {product.images.length > 0 ? <>
+                    <img className="catalog-product-image" src={product.images[(selectedProductImages[product.id] ?? 0) % product.images.length].url} alt={product.images[(selectedProductImages[product.id] ?? 0) % product.images.length].alt} loading="lazy" />
+                    {product.images.length > 1 && <div className="product-gallery-controls" aria-label={`Fotografías de ${product.name}`}>
+                      <button type="button" aria-label="Fotografía anterior" onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: ((current[product.id] ?? 0) - 1 + product.images.length) % product.images.length }))}>‹</button>
+                      <span>{(selectedProductImages[product.id] ?? 0) + 1} / {product.images.length}</span>
+                      <button type="button" aria-label="Fotografía siguiente" onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: ((current[product.id] ?? 0) + 1) % product.images.length }))}>›</button>
+                    </div>}
+                  </> : <div className="garment-shape" aria-hidden="true"><span /></div>}
                   <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
+                {product.images.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
+                  {product.images.map((image, imageIndex) => <button key={image.url} type="button" className={(selectedProductImages[product.id] ?? 0) === imageIndex ? 'active' : ''} aria-label={`Ver fotografía ${imageIndex + 1}`} aria-pressed={(selectedProductImages[product.id] ?? 0) === imageIndex} onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: imageIndex }))}><img src={image.url} alt="" loading="lazy" /></button>)}
+                </div>}
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
