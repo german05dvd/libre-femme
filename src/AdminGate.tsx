@@ -157,6 +157,15 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function addVariant(product: Product) {
+    setForm({ id: product.id, variantId: '', name: product.name, category: product.category ?? '', description: product.description ?? '', sku: '', size: '', color: '', colorHex: '#000000', price: '', weight: '' })
+    setImageFiles([]); setError(''); setNotice('Añade la nueva combinación de talla/color. Cada variante necesita su propio SKU y precio.')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  function editVariant(product: Product, variant: Variant) {
+    setForm({ id: product.id, variantId: variant.id, name: product.name, category: product.category ?? '', description: product.description ?? '', sku: variant.sku, size: variant.size ?? '', color: variant.color ?? '', colorHex: variant.color_hex ?? '#000000', price: String(variant.sale_price), weight: variant.weight_lb == null ? '' : String(variant.weight_lb) })
+    setError(''); setNotice(''); window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!supabase) return
@@ -337,6 +346,13 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
             </div>
           </form>
           {form.id && (
+            <section className="admin-variant-manager">
+              <div className="admin-section-heading"><div><p className="admin-kicker">TALLAS Y COLORES</p><h3>Variantes del producto</h3></div><button className="admin-secondary" type="button" onClick={() => { const product = products.find(item => item.id === form.id); if (product) addVariant(product) }}>Añadir variante</button></div>
+              <p className="admin-footnote">Cada combinación de talla y color tiene SKU, precio y disponibilidad propios. Añadir o editar variantes no modifica el stock; registra las unidades en Registro de movimientos.</p>
+              <div className="admin-variant-list">{(products.find(product => product.id === form.id)?.product_variants ?? []).map(variant => <article className="admin-variant-row" key={variant.id}><span className="admin-variant-swatch" style={variant.color_hex ? { backgroundColor: variant.color_hex } : undefined} /><div><strong>{[variant.size && 'Talla ' + variant.size, variant.color].filter(Boolean).join(' · ') || 'Variante sin talla/color'}</strong><p>SKU {variant.sku} · {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(variant.sale_price)}</p></div><button className="admin-secondary" type="button" onClick={() => { const product = products.find(item => item.id === form.id); if (product) editVariant(product, variant) }}>Editar</button></article>)}</div>
+            </section>
+          )}
+          {form.id && (
             <div className="admin-image-manager">
               <div className="admin-section-heading">
                 <div><p className="admin-kicker">IMAGEN DEL PRODUCTO</p><h3>Fotografías</h3></div>
@@ -348,7 +364,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
                 </label>
                 <button className="admin-secondary" type="button" disabled={imageFiles.length === 0 || uploadingImage} onClick={() => void uploadProductImages()}>{uploadingImage ? 'Procesando…' : `Subir ${imageFiles.length || ''} ${imageFiles.length === 1 ? 'fotografía' : 'fotografías'}`}</button>
               </div>
-              {imageFiles.length > 0 && <p className="admin-footnote">{imageFiles.map(file => file.name).join(' · ')}</p>}
+              {imageFiles.length > 0 && <div className="admin-selected-image-previews">{imageFiles.map(file => <figure key={file.name + file.lastModified}><img src={URL.createObjectURL(file)} alt={file.name} /><figcaption>{file.name}</figcaption></figure>)}</div>}
               {(products.find(product => product.id === form.id)?.product_images ?? []).length > 0 ? (
                 <ul className="admin-image-grid">
                   {[...(products.find(product => product.id === form.id)?.product_images ?? [])]
