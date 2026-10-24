@@ -108,7 +108,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [busyProduct, setBusyProduct] = useState('')
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -209,34 +209,76 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
     await loadProducts()
   }
 
-  async function uploadProductImage() {
-    if (!supabase || !form.id || !imageFile) return
+  async function uploadProductImages() {
+    if (!supabase || !form.id || imageFiles.length === 0) return
     setUploadingImage(true)
     setError('')
     setNotice('')
-    const extension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const storagePath = `${form.id}/${crypto.randomUUID()}.${extension}`
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(storagePath, imageFile, { contentType: imageFile.type, upsert: false })
-    if (uploadError) {
-      setError('No se pudo subir la imagen: ' + uploadError.message)
+    const existingImages = products.find(product => product.id === form.id)?.product_images ?? []
+    let position = existingImages.reduce((max, image) => Math.max(max, image.position), -1) + 1
+    let uploadedCount = 0
+
+    for (const imageFile of imageFiles) {
+      if (imageFile.size > 10 * 1024 * 1024) {
+        setError(`“${imageFile.name}” supera el límite de 10 MB. Las imágenes anteriores de esta tanda sí pueden haberse guardado.`)
+        break
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+      if (!allowedTypes.includes(imageFile.type)) {
+        setError(`“${imageFile.name}” no es JPEG, PNG, WebP ni AVIF. Las imágenes anteriores de esta tanda sí pueden haberse guardado.`)
+        break
+      }
+      const extension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const storagePath = `${form.id}/${crypto.randomUUID()}.${extension}`
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(storagePath, imageFile, { contentType: imageFile.type, upsert: false })
+      if (uploadError) {
+        setError(`No se pudo subir “${imageFile.name}”: ${uploadError.message}`)
+        break
+      }
+      const { error: recordError } = await supabase.from('product_images').insert({
+        product_id: form.id,
+        storage_path: storagePath,
+        alt_text: form.name.trim() || null,
+        position,
+      })
+      if (recordError) {
+        await supabase.storage.from('product-images').remove([storagePath])
+        setError(`No se pudo registrar “${imageFile.name}”: ${recordError.message}`)
+        break
+      }
+      uploadedCount += 1
+      position += 1
+    }
+
+    setImageFiles([])
+    const input = document.getElementById('product-image-files') as HTMLInputElement | null
+    if (input) input.value = ''
+    if (uploadedCount > 0) setNotice(`${uploadedCount} ${uploadedCount === 1 ? 'fotografía subida' : 'fotografías subidas'} correctamente.`)
+    setUploadingImage(false)
+    await loadProducts()
+  }
+
+  async function deleteProductImage(image: NonNullable<Product['product_images']>[number]) {
+    if (!supabase || !form.id) return
+    setError('')
+    setNotice('')
+    setUploadingImage(true)
+    const { error: storageError } = await supabase.storage.from('product-images').remove([image.storage_path])
+    if (storageError) {
+      setError('No se pudo eliminar el archivo: ' + storageError.message)
       setUploadingImage(false)
       return
     }
-    const { error: recordError } = await supabase.from('product_images').insert({
-      product_id: form.id,
-      storage_path: storagePath,
-      alt_text: form.name.trim() || null,
-      position: 0,
-    })
+    const { error: recordError } = await supabase.from('product_images').delete().eq('id', image.id)
     if (recordError) {
-      setError('La imagen se subió, pero no se pudo asociar al producto: ' + recordError.message)
+      setError('Se eliminó el archivo, pero no su registro: ' + recordError.message)
       setUploadingImage(false)
+      await loadProducts()
       return
     }
-    setImageFile(null)
-    setNotice('Imagen subida y asociada al producto.')
+    setNotice('Fotografía eliminada.')
     setUploadingImage(false)
     await loadProducts()
   }
@@ -295,23 +337,31 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
               <div className="admin-section-heading">
                 <div><p className="admin-kicker">IMAGEN DEL PRODUCTO</p><h3>Fotografías</h3></div>
               </div>
-              <p className="admin-footnote">Formatos admitidos: JPEG, PNG, WebP o AVIF. Tamaño máximo: 10 MB. Guarda primero el producto antes de subir imágenes.</p>
+              <p className="admin-footnote">Puedes seleccionar varias fotografías. Formatos: JPEG, PNG, WebP o AVIF; máximo 10 MB por archivo. La primera fotografía queda como portada de forma predeterminada.</p>
               <div className="admin-image-upload">
-                <label>Elegir imagen
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setImageFile(event.target.files?.[0] ?? null)} />
+                <label>Elegir fotografías
+                  <input id="product-image-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setImageFiles(Array.from(event.target.files ?? []))} />
                 </label>
-                <button className="admin-secondary" type="button" disabled={!imageFile || uploadingImage} onClick={() => void uploadProductImage()}>{uploadingImage ? 'Subiendo…' : 'Subir y asociar imagen'}</button>
+                <button className="admin-secondary" type="button" disabled={imageFiles.length === 0 || uploadingImage} onClick={() => void uploadProductImages()}>{uploadingImage ? 'Procesando…' : `Subir ${imageFiles.length || ''} ${imageFiles.length === 1 ? 'fotografía' : 'fotografías'}`}</button>
               </div>
-              {(products.find(product => product.id === form.id)?.product_images ?? []).length > 0 && (
-                <ul className="admin-image-list">
-                  {(products.find(product => product.id === form.id)?.product_images ?? []).map(image => (
-                    <li key={image.id}>
-                      <span>{image.alt_text || image.storage_path.split('/').pop()}</span>
-                      <small>{image.storage_path}</small>
-                    </li>
-                  ))}
+              {imageFiles.length > 0 && <p className="admin-footnote">{imageFiles.map(file => file.name).join(' · ')}</p>}
+              {(products.find(product => product.id === form.id)?.product_images ?? []).length > 0 ? (
+                <ul className="admin-image-grid">
+                  {[...(products.find(product => product.id === form.id)?.product_images ?? [])]
+                    .sort((a, b) => a.position - b.position)
+                    .map((image, index) => {
+                      const imageUrl = supabase?.storage.from('product-images').getPublicUrl(image.storage_path).data.publicUrl
+                      return <li key={image.id} className="admin-image-card">
+                        {imageUrl && <img src={imageUrl} alt={image.alt_text || `Fotografía ${index + 1} de ${form.name}`} loading="lazy" />}
+                        <div className="admin-image-card-info">
+                          <span>{index === 0 ? 'Portada' : `Fotografía ${index + 1}`}</span>
+                          <small>{image.alt_text || image.storage_path.split('/').pop()}</small>
+                          <button className="admin-secondary admin-danger-action" type="button" disabled={uploadingImage} onClick={() => void deleteProductImage(image)}>Eliminar</button>
+                        </div>
+                      </li>
+                    })}
                 </ul>
-              )}
+              ) : <p className="admin-empty">Este producto todavía no tiene fotografías.</p>}
             </div>
           )}
         </section>
