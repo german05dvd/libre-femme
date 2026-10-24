@@ -13,7 +13,6 @@ shadow_port = 54320
 major_version = 15
 
 [db.migrations]
-enabled = true
 schema_paths = []
 
 [db.seed]
