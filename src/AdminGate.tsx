@@ -199,15 +199,15 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
     }
     const variantResult = form.variantId
       ? await supabase.from('product_variants').update(variantPayload).eq('id', form.variantId)
-      : await supabase.from('product_variants').insert(variantPayload)
+      : await supabase.from('product_variants').insert(variantPayload).select('id').single()
     if (variantResult.error) {
       setError('El producto se guardó, pero falló la variante: ' + variantResult.error.message + '. Revisa el SKU y vuelve a guardar.')
       setSaving(false)
       await loadProducts()
       return
     }
-    setForm(emptyForm)
-    setNotice(form.id ? 'Producto actualizado correctamente.' : 'Producto creado como borrador. Ya puedes publicarlo.')
+    setForm({ ...form, id: productId, variantId: form.variantId || variantResult.data?.id || '' })
+    setNotice(form.id ? 'Producto actualizado correctamente.' : 'Producto creado como borrador. Ya puedes añadir fotografías.')
     setSaving(false)
     await loadProducts()
   }
@@ -442,5 +442,5 @@ export default function AdminGate() {
   if (gate.status === 'loading') return <main className="admin-shell"><div className="admin-loading" role="status">Comprobando acceso privado…</div></main>
   if (gate.status === 'signed-out') return <AdminLogin onSignedIn={() => void refreshAfterLogin()} />
   if (gate.status === 'not-admin') return <main className="admin-shell"><section className="admin-panel"><a className="admin-wordmark" href="/">LIBRE <span>femme</span></a><p className="admin-eyebrow">ACCESO RESTRINGIDO</p><h1>Esta cuenta no tiene permisos.</h1><p className="admin-intro">La sesión se inició, pero el usuario no está habilitado como administrador. No se ha concedido acceso al panel.</p><button className="admin-submit" type="button" onClick={() => void signOut()}>Cerrar sesión</button><a className="admin-back-link" href="/">Volver a la tienda</a></section></main>
-  return <ProductManagement displayName={gate.displayName} email={gate.email} onSignOut={() => void signOut()} />
+  return <ProductManagement email={gate.email} onSignOut={() => void signOut()} />
 }
