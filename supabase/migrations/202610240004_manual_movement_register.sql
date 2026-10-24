@@ -116,7 +116,8 @@ grant select, insert, update on public.manual_register_entries, public.manual_re
 revoke all on function public.confirm_manual_register_entry(uuid) from public, anon;
 grant execute on function public.confirm_manual_register_entry(uuid) to authenticated;
 
-create or replace view public.admin_inventory_register as
+drop view if exists public.admin_inventory_register;
+create view public.admin_inventory_register as
 select
   im.id, im.created_at, im.movement_type,
   case when im.movement_type in ('purchase_receipt','adjustment_in') then 'entrada'
