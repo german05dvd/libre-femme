@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import './admin.css'
+import AdminPurchases from './AdminPurchases'
 
 type GateState =
   | { status: 'loading' }
@@ -107,6 +108,7 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
   const [busyProduct, setBusyProduct] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [activeModule, setActiveModule] = useState<'products' | 'purchases'>('products')
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return
@@ -215,10 +217,11 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
         <h1>Hola, {displayName}.</h1>
         <p className="admin-intro">Administra el catálogo real de LIBRE femme. Los cambios se guardan en Supabase con los permisos de tu cuenta.</p>
         <nav className="admin-module-nav" aria-label="Módulos de administración">
-          <span className="active">Productos</span><span>Compras e inventario · siguiente módulo</span><span>Pedidos · siguiente módulo</span>
+          <button type="button" className={activeModule === 'products' ? 'active' : ''} onClick={() => setActiveModule('products')}>Productos</button><button type="button" className={activeModule === 'purchases' ? 'active' : ''} onClick={() => setActiveModule('purchases')}>Compras e inventario</button><span className="admin-module-disabled">Pedidos · siguiente etapa</span>
         </nav>
         {(error || notice) && <p className={error ? 'admin-feedback admin-feedback-error' : 'admin-feedback'} role="status">{error || notice}</p>}
 
+        {activeModule === 'products' && <>
         <section className="admin-section" aria-labelledby="product-form-title">
           <div className="admin-section-heading">
             <div><p className="admin-kicker">CATÁLOGO</p><h2 id="product-form-title">{form.id ? 'Editar producto' : 'Nuevo producto'}</h2></div>
@@ -255,6 +258,8 @@ function ProductManagement({ displayName, email, onSignOut }: { displayName: str
             </div>
           )}
         </section>
+        </>}
+        {activeModule === 'purchases' && <AdminPurchases />}
         <p className="admin-footnote admin-workspace-footnote">Productos conectados a Supabase. Compras, recepción, stock y pedidos serán el siguiente bloque; no se muestran como operativos hasta implementarlos.</p>
         <a className="admin-back-link" href="/">← Volver a la tienda pública</a>
       </section>
