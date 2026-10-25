@@ -93,18 +93,18 @@ begin
     if e.entry_type = 'purchase' then
       insert into public.inventory_movements (
         variant_id, movement_type, quantity_delta, unit_cost_usd,
-        manual_register_line_id, created_by, note, created_at
+        manual_register_line_id, created_by, note
       ) values (
         line.variant_id, 'purchase_receipt', line.quantity, line.unit_cost_usd,
-        line.id, e.created_by, coalesce(e.notes, 'Manual purchase'), e.occurred_at
+        line.id, e.created_by, coalesce(e.notes, 'Manual purchase')
       );
     elsif e.entry_type = 'sale' then
       insert into public.inventory_movements (
         variant_id, movement_type, quantity_delta, unit_cost_usd,
-        manual_register_line_id, created_by, note, created_at
+        manual_register_line_id, created_by, note
       ) values (
         line.variant_id, 'sale', -line.quantity, 0,
-        line.id, e.created_by, coalesce(e.notes, 'Manual sale'), e.occurred_at
+        line.id, e.created_by, coalesce(e.notes, 'Manual sale')
       );
     elsif e.entry_type = 'adjustment_in' then
       insert into public.inventory_movements (
@@ -143,7 +143,7 @@ grant execute on function public.confirm_manual_register_entry(uuid) to authenti
 drop view if exists public.admin_inventory_register;
 create view public.admin_inventory_register as
 select
-  im.id, im.created_at, im.movement_type,
+  im.id, coalesce(mre.occurred_at, im.created_at) as created_at, im.movement_type,
   case when im.movement_type in ('purchase_receipt','adjustment_in') then 'entrada'
        when im.movement_type in ('sale','adjustment_out') then 'salida' end as action,
   p.name as product_name, v.sku, v.size, v.color,
