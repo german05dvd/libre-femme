@@ -150,7 +150,7 @@ select
   abs(im.quantity_delta) as quantity,
   case when im.movement_type = 'sale' then coalesce(mrl.unit_sale_price_usd, oi.unit_sale_price_usd)
        else im.unit_cost_usd end as unit_price_usd,
-  case when im.movement_type = 'sale' then coalesce(mrl.unit_sale_price_usd, oi.unit_sale_price_usd) * abs(im.quantity_delta)
+  case when im.movement_type = 'sale' then coalesce(mrl.unit_sale_price_usd * abs(im.quantity_delta), oi.line_total_usd)
        else abs(im.quantity_delta) * im.unit_cost_usd end as total_usd,
   case when im.movement_type = 'sale' then coalesce((
     select sum(a.quantity * a.unit_cost_usd)
