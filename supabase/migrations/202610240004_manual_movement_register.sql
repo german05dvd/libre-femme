@@ -148,9 +148,9 @@ select
        when im.movement_type in ('sale','adjustment_out') then 'salida' end as action,
   p.name as product_name, v.sku, v.size, v.color,
   abs(im.quantity_delta) as quantity,
-  case when im.movement_type = 'sale' then mrl.unit_sale_price_usd
+  case when im.movement_type = 'sale' then coalesce(mrl.unit_sale_price_usd, oi.unit_sale_price_usd)
        else im.unit_cost_usd end as unit_price_usd,
-  case when im.movement_type = 'sale' then abs(im.quantity_delta) * mrl.unit_sale_price_usd
+  case when im.movement_type = 'sale' then coalesce(mrl.unit_sale_price_usd, oi.unit_sale_price_usd) * abs(im.quantity_delta)
        else abs(im.quantity_delta) * im.unit_cost_usd end as total_usd,
   case when im.movement_type = 'sale' then coalesce((
     select sum(a.quantity * a.unit_cost_usd)
@@ -160,7 +160,7 @@ select
     select round(sum(a.quantity * a.unit_cost_usd), 2)
     from public.inventory_cost_allocations a where a.sale_movement_id = im.id
   ) else null end as cost_of_sale_usd,
-  mrl.unit_sale_price_usd,
+  coalesce(mrl.unit_sale_price_usd, oi.unit_sale_price_usd) as unit_sale_price_usd,
   im.note, im.source_order_item_id, im.source_purchase_item_id, v.color_hex,
   mre.reference, mre.entry_type, mre.status as register_status
 from public.inventory_movements im
