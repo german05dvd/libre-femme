@@ -25,7 +25,7 @@ export default function AdminInventory() {
     setMovements((movementResult.data ?? []) as Movement[])
     setLoading(false)
   }, [])
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
   const units = stock.reduce((sum, row) => sum + Number(row.quantity_on_hand || 0), 0)
   const value = stock.reduce((sum, row) => sum + Number(row.quantity_on_hand || 0) * Number(row.average_cost_usd || 0), 0)
   return <div className="admin-purchases">
