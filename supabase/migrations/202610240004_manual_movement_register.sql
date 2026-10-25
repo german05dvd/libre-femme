@@ -12,7 +12,7 @@ drop view if exists public.public_catalog_variants;
 create view public.public_catalog_variants as
 select
   v.id, v.product_id, v.size, v.color, v.sale_price,
-  coalesce(s.quantity_on_hand, 0) as quantity_on_hand,
+  (coalesce(s.quantity_on_hand, 0) > 0) as is_available,
   v.color_hex
 from public.product_variants v
 join public.products p on p.id = v.product_id
@@ -93,18 +93,18 @@ begin
     if e.entry_type = 'purchase' then
       insert into public.inventory_movements (
         variant_id, movement_type, quantity_delta, unit_cost_usd,
-        manual_register_line_id, created_by, note
+        manual_register_line_id, created_by, note, created_at
       ) values (
         line.variant_id, 'purchase_receipt', line.quantity, line.unit_cost_usd,
-        line.id, e.created_by, coalesce(e.notes, 'Manual purchase')
+        line.id, e.created_by, coalesce(e.notes, 'Manual purchase'), e.occurred_at
       );
     elsif e.entry_type = 'sale' then
       insert into public.inventory_movements (
         variant_id, movement_type, quantity_delta, unit_cost_usd,
-        manual_register_line_id, created_by, note
+        manual_register_line_id, created_by, note, created_at
       ) values (
         line.variant_id, 'sale', -line.quantity, 0,
-        line.id, e.created_by, coalesce(e.notes, 'Manual sale')
+        line.id, e.created_by, coalesce(e.notes, 'Manual sale'), e.occurred_at
       );
     elsif e.entry_type = 'adjustment_in' then
       insert into public.inventory_movements (
