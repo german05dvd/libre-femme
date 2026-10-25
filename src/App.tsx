@@ -183,7 +183,7 @@ function App() {
     setCart((current) => {
       const [productId, variantId] = key.split('::')
       const variant = products.find(product => product.id === productId)?.variants.find(item => item.id === variantId)
-      const maxQuantity = variant?.is_available ? 99 : 0
+      const maxQuantity = variant?.is_available ? 1 : 0
       const nextQuantity = Math.min(maxQuantity, Math.max(0, (current[key] ?? 0) + delta))
       const next = { ...current }
       if (nextQuantity === 0) delete next[key]
