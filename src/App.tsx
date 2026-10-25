@@ -8,7 +8,7 @@ type Variant = {
   color: string | null
   color_hex: string | null
   sale_price: number
-  quantity_on_hand: number
+  is_available: boolean
 }
 type Product = {
   id: string
@@ -67,7 +67,7 @@ function App() {
         return
       }
       const [{ data: variantRows, error: variantError }, { data: imageRows }] = await Promise.all([
-        client.from('public_catalog_variants').select('id, product_id, size, color, color_hex, sale_price, quantity_on_hand'),
+        client.from('public_catalog_variants').select('id, product_id, size, color, color_hex, sale_price, is_available'),
         client.from('public_catalog_images').select('id, product_id, storage_path, alt_text, position').order('position'),
       ])
       if (cancelled) return
@@ -94,7 +94,7 @@ function App() {
           description: row.description || 'Una pieza elegida para ti.',
           variants: (variantRows ?? [])
             .filter((variant) => variant.product_id === row.id)
-            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, color_hex: variant.color_hex, sale_price: Number(variant.sale_price), quantity_on_hand: Number(variant.quantity_on_hand) })),
+            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, color_hex: variant.color_hex, sale_price: Number(variant.sale_price), is_available: Boolean(variant.is_available) })),
           images,
         }
       }).filter((product) => product.variants.length > 0)
@@ -167,11 +167,11 @@ function App() {
       return
     }
     const key = product.id + '::' + variant.id
-    if (variant.quantity_on_hand < 1) {
+    if (!variant.is_available) {
       setCartNotice('Esta variante está agotada por el momento.')
       return
     }
-    if ((cart[key] ?? 0) >= variant.quantity_on_hand) {
+    if ((cart[key] ?? 0) >= 1) {
       setCartNotice('Ya tienes en tu bolsa todas las unidades disponibles de esta variante.')
       return
     }
@@ -183,7 +183,7 @@ function App() {
     setCart((current) => {
       const [productId, variantId] = key.split('::')
       const variant = products.find(product => product.id === productId)?.variants.find(item => item.id === variantId)
-      const maxQuantity = variant?.quantity_on_hand ?? 0
+      const maxQuantity = variant?.is_available ? 99 : 0
       const nextQuantity = Math.min(maxQuantity, Math.max(0, (current[key] ?? 0) + delta))
       const next = { ...current }
       if (nextQuantity === 0) delete next[key]
