@@ -86,6 +86,18 @@ begin
     raise exception 'A register entry must contain at least one line';
   end if;
 
+  -- FIFO allocations are immutable ledger records. Do not allow a backdated
+  -- manual entry to change the chronological order after later movements exist.
+  if exists (
+    select 1
+    from public.manual_register_lines l
+    join public.inventory_movements im on im.variant_id = l.variant_id
+    where l.entry_id = e.id
+      and im.created_at > e.occurred_at
+  ) then
+    raise exception 'Entry date precedes an existing inventory movement for one of its variants; use the current date or correct the ledger first';
+  end if;
+
   for line in
     select * from public.manual_register_lines
     where entry_id = e.id order by variant_id, id
