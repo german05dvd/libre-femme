@@ -1,26 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
+import { isSupabaseConfigured, supabase } from './lib/supabase'
 import './App.css'
 
 type Product = {
   id: number
+  databaseId: string
   name: string
   category: string
   price: number
   color: string
   label: string
   description: string
+  sizes: string[]
+  colors: string[]
+  imageUrl?: string
 }
-
-const products: Product[] = [
-  { id: 1, name: 'Vestido Alba', category: 'Vestidos', price: 38, color: 'rose', label: 'NUEVO', description: 'Línea fluida · edición limitada' },
-  { id: 2, name: 'Blusa Amalia', category: 'Tops', price: 24, color: 'sand', label: 'ESENCIAL', description: 'Textura suave · corte relajado' },
-  { id: 3, name: 'Pantalón Siena', category: 'Pantalones', price: 32, color: 'olive', label: '', description: 'Silueta recta · tiro alto' },
-  { id: 4, name: 'Conjunto Clara', category: 'Conjuntos', price: 46, color: 'clay', label: 'FAVORITO', description: 'Dos piezas · estilo versátil' },
-  { id: 5, name: 'Top Noa', category: 'Tops', price: 19, color: 'cream', label: '', description: 'Minimalismo cotidiano' },
-  { id: 6, name: 'Vestido Vera', category: 'Vestidos', price: 41, color: 'plum', label: '', description: 'Movimiento natural · noche y día' },
-]
-
-const categories = ['Todo', 'Vestidos', 'Tops', 'Pantalones', 'Conjuntos']
+type CatalogProductRow = { id: string; name: string; slug: string; description: string | null; category: string | null }
+type CatalogVariantRow = { id: string; product_id: string; size: string | null; color: string | null; sale_price: number }
+type CatalogImageRow = { product_id: string; storage_path: string; alt_text: string | null; position: number }
 const whatsappNumber = '5358352149'
 const colorNames: Record<string, string> = { rose: 'rosa arcilla', chocolate: 'chocolate', cream: 'crema', sand: 'arena', olive: 'oliva', clay: 'arcilla', plum: 'ciruela' }
 type CartLine = { key: string; product: Product; size: string; color: string; quantity: number }
@@ -31,6 +28,9 @@ function formatPrice(price: number) {
 
 function App() {
   const [activeCategory, setActiveCategory] = useState('Todo')
+  const [products, setProducts] = useState<Product[]>([])
+  const [catalogLoading, setCatalogLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
   const [cartOpen, setCartOpen] = useState(false)
@@ -39,6 +39,59 @@ function App() {
   const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({})
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({})
   const [sloganText, setSloganText] = useState('Viste como te sientes.')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadCatalog() {
+      setCatalogLoading(true)
+      setCatalogError('')
+      if (!isSupabaseConfigured || !supabase) {
+        setCatalogError('La tienda todavía no está conectada a Supabase.')
+        setCatalogLoading(false)
+        return
+      }
+      const [productsResult, variantsResult, imagesResult] = await Promise.all([
+        supabase.from('public_catalog_products').select('id,name,slug,description,category').order('name'),
+        supabase.from('public_catalog_variants').select('id,product_id,size,color,sale_price'),
+        supabase.from('public_catalog_images').select('product_id,storage_path,alt_text,position').order('position'),
+      ])
+      if (cancelled) return
+      const failure = productsResult.error || variantsResult.error || imagesResult.error
+      if (failure) {
+        setCatalogError('No pudimos cargar el catálogo. Comprueba las vistas públicas y sus permisos en Supabase.')
+        setProducts([])
+        setCatalogLoading(false)
+        return
+      }
+      const rows = (productsResult.data ?? []) as CatalogProductRow[]
+      const variants = (variantsResult.data ?? []) as CatalogVariantRow[]
+      const images = (imagesResult.data ?? []) as CatalogImageRow[]
+      const mapped: Product[] = rows.map((row, index) => {
+        const productVariants = variants.filter((variant) => variant.product_id === row.id)
+        const firstImage = images.find((image) => image.product_id === row.id)
+        const imageUrl = firstImage && supabase
+          ? supabase.storage.from('product-images').getPublicUrl(firstImage.storage_path).data.publicUrl
+          : undefined
+        return {
+          id: index + 1,
+          databaseId: row.id,
+          name: row.name,
+          category: row.category?.trim() || 'Otros',
+          price: productVariants.length ? Math.min(...productVariants.map((variant) => Number(variant.sale_price))) : 0,
+          color: 'cream',
+          label: '',
+          description: row.description?.trim() || 'Una pieza LIBRE femme.',
+          sizes: [...new Set(productVariants.map((variant) => variant.size).filter((value): value is string => Boolean(value)))],
+          colors: [...new Set(productVariants.map((variant) => variant.color).filter((value): value is string => Boolean(value)))],
+          imageUrl,
+        }
+      }).filter((product) => variants.some((variant) => variant.product_id === product.databaseId))
+      setProducts(mapped)
+      setCatalogLoading(false)
+    }
+    void loadCatalog()
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (!cartOpen) return
@@ -80,6 +133,7 @@ function App() {
     return () => window.clearInterval(timer)
   }, [])
 
+  const availableCategories = useMemo(() => ['Todo', ...new Set(products.map((product) => product.category))], [products])
   const visibleProducts = useMemo(
     () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
     [activeCategory, searchTerm],
@@ -93,8 +147,12 @@ function App() {
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 
   const addToCart = (product: Product) => {
-    const size = selectedSizes[product.id] ?? 'M'
-    const color = selectedColors[product.id] ?? product.color
+    const size = selectedSizes[product.id] ?? product.sizes[0]
+    const color = selectedColors[product.id] ?? product.colors[0]
+    if (!size || !color) {
+      setCartNotice('Esta pieza todavía no tiene tallas y colores configurados.')
+      return
+    }
     const key = product.id + '::' + size + '::' + color
     changeQuantity(key, 1)
     setCartNotice(product.name + ' · talla ' + size + ' · ' + (colorNames[color] ?? color) + ' añadida a tu bolsa')
@@ -165,7 +223,7 @@ function App() {
           <div className="collection-toolbar">
             <label className="product-search"><span className="sr-only">Buscar prendas</span><span className="search-icon" aria-hidden="true">⌕</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar una prenda…" /></label>
             <div className="category-filters" role="group" aria-label="Filtrar por categoría">
-              {categories.map((category) => <button key={category} type="button" className={activeCategory === category ? 'filter-chip active' : 'filter-chip'} onClick={() => setActiveCategory(category)} aria-pressed={activeCategory === category}>{category}</button>)}
+              {availableCategories.map((category) => <button key={category} type="button" className={activeCategory === category ? 'filter-chip active' : 'filter-chip'} onClick={() => setActiveCategory(category)} aria-pressed={activeCategory === category}>{category}</button>)}
             </div>
             <span className="product-count">{visibleProducts.length} {visibleProducts.length === 1 ? "PIEZA" : "PIEZAS"}</span>
           </div>
@@ -173,23 +231,21 @@ function App() {
             {visibleProducts.map((product, index) => (
               <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
                 <div className={`product-art product-art-${selectedColors[product.id] ?? product.color}`}>
-                  <span className="product-number">0{index + 1}</span>
-                  {product.label && <span className="product-label">{product.label}</span>}
-                  <span className="availability-note">+10 disponibles</span>
-                  <div className="garment-shape" aria-hidden="true"><span /></div>
+                  <span className="product-number">{String(index + 1).padStart(2, "0")}</span>
+                  {product.imageUrl ? <img className="catalog-product-image" src={product.imageUrl} alt={product.name} loading="lazy" /> : <div className="garment-shape" aria-hidden="true"><span /></div>}
                   <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(product.price)}</span></div>
                 <div className="product-options">
-                  <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{['S', 'M', 'L', 'XL'].map((size) => <button key={size} type="button" className={`size-option ${(selectedSizes[product.id] ?? 'M') === size ? 'selected' : ''}`} aria-pressed={(selectedSizes[product.id] ?? 'M') === size} onClick={() => setSelectedSizes((current) => ({ ...current, [product.id]: size }))}>{size}</button>)}</div>
-                  <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{['rose', 'chocolate', 'cream'].map((color) => <button key={color} type="button" className={`color-swatch swatch-${color} ${(selectedColors[product.id] ?? product.color) === color ? 'selected' : ''}`} aria-label={`Color ${color}`} aria-pressed={(selectedColors[product.id] ?? product.color) === color} onClick={() => setSelectedColors((current) => ({ ...current, [product.id]: color }))} />)}</div></div>
+                  <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{product.sizes.map((size) => <button key={size} type="button" className={`size-option ${(selectedSizes[product.id] ?? 'M') === size ? 'selected' : ''}`} aria-pressed={(selectedSizes[product.id] ?? 'M') === size} onClick={() => setSelectedSizes((current) => ({ ...current, [product.id]: size }))}>{size}</button>)}</div>
+                  <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{product.colors.map((color) => <button key={color} type="button" className={`color-swatch swatch-${color} ${(selectedColors[product.id] ?? product.color) === color ? 'selected' : ''}`} aria-label={`Color ${color}`} aria-pressed={(selectedColors[product.id] ?? product.color) === color} onClick={() => setSelectedColors((current) => ({ ...current, [product.id]: color }))} />)}</div></div>
                   <button className="product-add-link" type="button" onClick={() => addToCart(product)}>Añadir a la bolsa <span>↗</span></button>
                 </div>
               </article>
             ))}
           </div>
-          {visibleProducts.length === 0 && <div className="no-results"><span>✳</span><h3>No encontramos esa pieza.</h3><p>Prueba con otro nombre o cambia los filtros.</p><button className="text-link" type="button" onClick={() => { setSearchTerm(""); setActiveCategory("Todo") }}>Limpiar búsqueda</button></div>}
-          <p className="demo-note">Vista de demostración: precios y productos de ejemplo. La disponibilidad real se conectará al inventario.</p>
+          {!catalogLoading && !catalogError && products.length > 0 && visibleProducts.length === 0 && <div className="no-results"><span>✳</span><h3>No encontramos esa pieza.</h3><p>Prueba con otro nombre o cambia los filtros.</p><button className="text-link" type="button" onClick={() => { setSearchTerm(""); setActiveCategory("Todo") }}>Limpiar búsqueda</button></div>}
+          {catalogLoading && <p className="catalog-state" role="status">Cargando colección…</p>}{!catalogLoading && catalogError && <div className="no-results" role="alert"><h3>No pudimos mostrar la colección.</h3><p>{catalogError}</p><button className="text-link" type="button" onClick={() => window.location.reload()}>Reintentar</button></div>}{!catalogLoading && !catalogError && products.length === 0 && <div className="no-results"><h3>La colección se está preparando.</h3><p>Pronto encontrarás aquí las piezas disponibles.</p></div>}
         </section>
 
         <section className="details-editorial" id="detalles">
