@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 
 type Variant = { id: string; sku: string; size: string | null; color: string | null; color_hex: string | null; sale_price: number; product: { name: string } | null }
+type VariantQueryRow = { id: string; sku: string; size: string | null; color: string | null; color_hex: string | null; sale_price: number; products: { name: string } | null }
 type Line = { variantId: string; quantity: string; cost: string; salePrice: string }
 type HistoryRow = { id: string; created_at: string; movement_type: string; action: string; product_name: string; sku: string; size: string | null; color: string | null; quantity: number; total_usd: number | null; note: string | null; reference: string | null; register_status: string | null }
 const movementName: Record<string, string> = { purchase_receipt: 'Entrada de mercancía', sale: 'Venta', adjustment_in: 'Ajuste de entrada', adjustment_out: 'Ajuste de salida' }
@@ -43,10 +44,10 @@ export default function AdminManualRegister() {
       .select('id,sku,size,color,color_hex,sale_price,products(name)')
       .eq('is_active', true).order('sku')
     if (queryError) setError('No se pudieron cargar las variantes: ' + queryError.message)
-    else setVariants((data ?? []).map((v: any) => ({ ...v, product: v.products })))
+    else setVariants(((data ?? []) as unknown as VariantQueryRow[]).map(({ products, ...variant }) => ({ ...variant, product: products })))
   }, [])
-  useEffect(() => { void loadVariants() }, [loadVariants])
-  useEffect(() => { void loadHistory() }, [loadHistory])
+  useEffect(() => { void Promise.resolve().then(loadVariants) }, [loadVariants])
+  useEffect(() => { void Promise.resolve().then(loadHistory) }, [loadHistory])
 
   function updateLine(index: number, patch: Partial<Line>) {
     setLines(current => current.map((line, i) => i === index ? { ...line, ...patch } : line))
