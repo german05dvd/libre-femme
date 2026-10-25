@@ -4,11 +4,15 @@ import { supabase } from './lib/supabase'
 type Variant = { id: string; sku: string; size: string | null; color: string | null; color_hex: string | null; sale_price: number; product: { name: string } | null }
 type Line = { variantId: string; quantity: string; cost: string; salePrice: string }
 const money = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)
+const localDateTimeInput = (date: Date) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  return local.toISOString().slice(0, 16)
+}
 
 export default function AdminManualRegister() {
   const [variants, setVariants] = useState<Variant[]>([])
   const [type, setType] = useState<'purchase' | 'sale'>('purchase')
-  const [occurredAt, setOccurredAt] = useState(new Date().toISOString().slice(0, 16))
+  const [occurredAt, setOccurredAt] = useState(() => localDateTimeInput(new Date()))
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [lines, setLines] = useState<Line[]>([{ variantId: '', quantity: '1', cost: '', salePrice: '' }])
@@ -45,39 +49,50 @@ export default function AdminManualRegister() {
     if (new Set(lines.map(l => l.variantId)).size !== lines.length) {
       setError('No repitas una variante en varias líneas: agrupa su cantidad en una sola línea y usa el coste unitario correspondiente.'); return
     }
-    if (type === 'purchase' && lines.some(l => l.cost === '' || Number(l.cost) < 0)) {
+    if (type === 'purchase' && lines.some(l => l.cost === '' || !Number.isFinite(Number(l.cost)) || Number(l.cost) < 0)) {
       setError('Indica el coste unitario de compra de cada línea.'); return
     }
-    if (type === 'sale' && lines.some(l => l.salePrice === '' || Number(l.salePrice) < 0)) {
+    if (type === 'sale' && lines.some(l => l.salePrice === '' || !Number.isFinite(Number(l.salePrice)) || Number(l.salePrice) < 0)) {
       setError('Indica el precio unitario real de venta de cada línea.'); return
     }
+    const occurredDate = new Date(occurredAt)
+    if (!occurredAt || Number.isNaN(occurredDate.getTime())) {
+      setError('Indica una fecha y hora válidas para el movimiento.'); return
+    }
+
     setBusy(true)
-    const { data: authData } = await supabase.auth.getUser()
-    const { data: entry, error: entryError } = await supabase.from('manual_register_entries').insert({
-      entry_type: type, occurred_at: new Date(occurredAt).toISOString(), reference: reference.trim() || null,
-      notes: notes.trim() || null, created_by: authData.user?.id ?? null,
-    }).select('id').single()
-    if (entryError || !entry) {
-      setError('No se pudo crear el registro: ' + (entryError?.message ?? 'respuesta vacía')); setBusy(false); return
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser()
+      if (authError) throw new Error('No se pudo verificar la sesión: ' + authError.message)
+      const { data: entry, error: entryError } = await supabase.from('manual_register_entries').insert({
+        entry_type: type, occurred_at: occurredDate.toISOString(), reference: reference.trim() || null,
+        notes: notes.trim() || null, created_by: authData.user?.id ?? null,
+      }).select('id').single()
+      if (entryError || !entry) {
+        throw new Error('No se pudo crear el registro: ' + (entryError?.message ?? 'respuesta vacía'))
+      }
+      const rows = lines.map(line => ({
+        entry_id: entry.id, variant_id: line.variantId, quantity: Number(line.quantity),
+        unit_cost_usd: type === 'purchase' ? Number(line.cost) : 0,
+        unit_sale_price_usd: type === 'sale' ? Number(line.salePrice) : 0,
+      }))
+      const { error: linesError } = await supabase.from('manual_register_lines').insert(rows)
+      if (linesError) {
+        setError('Se creó un borrador, pero fallaron sus líneas: ' + linesError.message + '. El inventario aún no ha cambiado.')
+        return
+      }
+      const { error: confirmError } = await supabase.rpc('confirm_manual_register_entry', { p_entry_id: entry.id })
+      if (confirmError) {
+        setError('El registro quedó como borrador y no cambió el inventario: ' + confirmError.message)
+        return
+      }
+      setNotice(type === 'purchase' ? 'Entrada confirmada. El inventario y los costes se actualizaron.' : 'Venta confirmada. El inventario se descontó y quedó registrada.')
+      setReference(''); setNotes(''); setLines([{ variantId: '', quantity: '1', cost: '', salePrice: '' }])
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Ocurrió un error inesperado al registrar el movimiento.')
+    } finally {
+      setBusy(false)
     }
-    const rows = lines.map(line => ({
-      entry_id: entry.id, variant_id: line.variantId, quantity: Number(line.quantity),
-      unit_cost_usd: type === 'purchase' ? Number(line.cost) : 0,
-      unit_sale_price_usd: type === 'sale' ? Number(line.salePrice) : 0,
-    }))
-    const { error: linesError } = await supabase.from('manual_register_lines').insert(rows)
-    if (linesError) {
-      setError('Se creó un borrador, pero fallaron sus líneas: ' + linesError.message + '. El inventario aún no ha cambiado.')
-      setBusy(false); return
-    }
-    const { error: confirmError } = await supabase.rpc('confirm_manual_register_entry', { p_entry_id: entry.id })
-    if (confirmError) {
-      setError('El registro quedó como borrador y no cambió el inventario: ' + confirmError.message)
-      setBusy(false); return
-    }
-    setNotice(type === 'purchase' ? 'Entrada confirmada. El inventario y los costes se actualizaron.' : 'Venta confirmada. El inventario se descontó y quedó registrada.')
-    setReference(''); setNotes(''); setLines([{ variantId: '', quantity: '1', cost: '', salePrice: '' }])
-    setBusy(false)
   }
 
   const total = lines.reduce((sum, line) => sum + Number(line.quantity || 0) * Number(type === 'purchase' ? line.cost || 0 : line.salePrice || 0), 0)
