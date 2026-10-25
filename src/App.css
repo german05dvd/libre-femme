@@ -458,3 +458,19 @@ html { scroll-padding-top: 24px; }
   .details-link { margin-top: 24px; }
   .details-signature { flex-wrap: wrap; }
 }
+
+/* Live catalog media: preserve the image ratio on desktop and mobile. */
+.catalog-product-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.catalog-state {
+  padding: 28px 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
