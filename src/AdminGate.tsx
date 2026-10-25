@@ -216,8 +216,35 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
       await loadProducts()
       return
     }
+    let uploadedDuringCreate = 0
+    if (!form.id && imageFiles.length > 0) {
+      for (const imageFile of imageFiles) {
+        if (imageFile.size > 10 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(imageFile.type)) {
+          setError('El producto se guardó, pero una fotografía no cumple el formato permitido o supera 10 MB. Puedes añadirla después de guardar.')
+          break
+        }
+        const extension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const storagePath = `${productId}/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await supabase.storage.from('product-images')
+          .upload(storagePath, imageFile, { contentType: imageFile.type, upsert: false })
+        if (uploadError) {
+          setError('El producto se guardó, pero no se pudo subir una fotografía: ' + uploadError.message)
+          break
+        }
+        const { error: imageRecordError } = await supabase.from('product_images').insert({
+          product_id: productId, storage_path: storagePath, alt_text: form.name.trim() || null, position: uploadedDuringCreate,
+        })
+        if (imageRecordError) {
+          await supabase.storage.from('product-images').remove([storagePath])
+          setError('El producto se guardó, pero no se pudo registrar una fotografía: ' + imageRecordError.message)
+          break
+        }
+        uploadedDuringCreate += 1
+      }
+      setImageFiles([])
+    }
     setForm({ ...form, id: productId, variantId: form.variantId || variantResult.data?.id || '' })
-    setNotice(form.id ? 'Producto actualizado correctamente.' : 'Producto creado como borrador. Ya puedes añadir fotografías.')
+    if (!error) setNotice(form.id ? 'Producto actualizado correctamente.' : uploadedDuringCreate ? `Producto creado como borrador con ${uploadedDuringCreate} fotografía(s).` : 'Producto creado como borrador. Ya puedes añadir fotografías.')
     setSaving(false)
     await loadProducts()
   }
@@ -341,6 +368,11 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
             <label>Nombre del color<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} placeholder="Rosa arcilla" /></label>
             <label>Código HEX del color<div className="admin-color-control"><input type="color" aria-label="Selector de color" value={/^#[0-9A-Fa-f]{6}$/.test(form.colorHex) ? form.colorHex : '#000000'} onChange={e => setForm({ ...form, colorHex: e.target.value })} /><input value={form.colorHex} pattern="^#[0-9A-Fa-f]{6}$" onChange={e => setForm({ ...form, colorHex: e.target.value })} placeholder="#C58A82" /></div></label>
             <label>Peso (lb, opcional)<input type="number" min="0.001" step="0.001" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="0.350" /></label>
+            {!form.id && <label className="admin-field-wide">Fotografías del producto (opcional)
+              <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setImageFiles(Array.from(event.target.files ?? []))} />
+              <span className="admin-footnote">Puedes seleccionar varias imágenes; JPEG, PNG, WebP o AVIF, máximo 10 MB por archivo. Se subirán al guardar el producto.</span>
+              {imageFiles.length > 0 && <div className="admin-selected-image-previews">{imageFiles.map(file => <figure key={file.name + file.lastModified}><img src={URL.createObjectURL(file)} alt={file.name} /><figcaption>{file.name}</figcaption></figure>)}</div>}
+            </label>}
             <div className="admin-field-wide admin-form-actions">
               <button className="admin-submit" type="submit" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Crear producto y variante'} <span aria-hidden="true">↗</span></button>
               <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos.</p>
