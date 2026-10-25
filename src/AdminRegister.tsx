@@ -90,7 +90,7 @@ export default function AdminRegister() {
     const amount = Number(movement.total_usd ?? 0)
     if (movement.movement_type === 'sale') {
       totals.sales += amount
-      totals.costOfSales += Number(movement.cost_of_sale_usd ?? (Number(movement.unit_cost_usd) * Number(movement.quantity)))
+      totals.costOfSales += Number(movement.cost_of_sale_usd ?? movement.unit_cost_usd ?? 0)
     }
     if (movement.movement_type === 'purchase_receipt') totals.purchases += amount
     return totals
