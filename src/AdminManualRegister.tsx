@@ -3,6 +3,9 @@ import { supabase } from './lib/supabase'
 
 type Variant = { id: string; sku: string; size: string | null; color: string | null; color_hex: string | null; sale_price: number; product: { name: string } | null }
 type Line = { variantId: string; quantity: string; cost: string; salePrice: string }
+type HistoryRow = { id: string; created_at: string; movement_type: string; action: string; product_name: string; sku: string; size: string | null; color: string | null; quantity: number; total_usd: number | null; note: string | null; reference: string | null; register_status: string | null }
+const movementName: Record<string, string> = { purchase_receipt: 'Entrada de mercancía', sale: 'Venta', adjustment_in: 'Ajuste de entrada', adjustment_out: 'Ajuste de salida' }
+const dateLabel = (value: string) => new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 const money = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)
 const localDateTimeInput = (date: Date) => {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
@@ -19,6 +22,20 @@ export default function AdminManualRegister() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [history, setHistory] = useState<HistoryRow[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyError, setHistoryError] = useState('')
+
+  const loadHistory = useCallback(async () => {
+    if (!supabase) return
+    setHistoryLoading(true)
+    const { data, error: queryError } = await supabase.from('admin_inventory_register')
+      .select('id,created_at,movement_type,action,product_name,sku,size,color,quantity,total_usd,note,reference,register_status')
+      .order('created_at', { ascending: false }).limit(100)
+    if (queryError) setHistoryError('No se pudo cargar el historial: ' + queryError.message)
+    else { setHistoryError(''); setHistory((data ?? []) as HistoryRow[]) }
+    setHistoryLoading(false)
+  }, [])
 
   const loadVariants = useCallback(async () => {
     if (!supabase) return
@@ -29,6 +46,7 @@ export default function AdminManualRegister() {
     else setVariants((data ?? []).map((v: any) => ({ ...v, product: v.products })))
   }, [])
   useEffect(() => { void loadVariants() }, [loadVariants])
+  useEffect(() => { void loadHistory() }, [loadHistory])
 
   function updateLine(index: number, patch: Partial<Line>) {
     setLines(current => current.map((line, i) => i === index ? { ...line, ...patch } : line))
@@ -88,6 +106,7 @@ export default function AdminManualRegister() {
       }
       setNotice(type === 'purchase' ? 'Entrada confirmada. El inventario y los costes se actualizaron.' : 'Venta confirmada. El inventario se descontó y quedó registrada.')
       setReference(''); setNotes(''); setLines([{ variantId: '', quantity: '1', cost: '', salePrice: '' }])
+      await Promise.all([loadHistory(), loadVariants()])
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Ocurrió un error inesperado al registrar el movimiento.')
     } finally {
@@ -120,5 +139,29 @@ export default function AdminManualRegister() {
     <div className="admin-register-total"><span>Total declarado de la operación</span><strong>{money(total)}</strong></div>
     <button className="admin-submit" type="button" disabled={busy || variants.length === 0} onClick={() => void submitEntry()}>{busy ? 'Registrando…' : type === 'purchase' ? 'Confirmar entrada y actualizar stock' : 'Confirmar venta y descontar stock'} <span aria-hidden="true">↗</span></button>
     {variants.length === 0 && <p className="admin-empty">Primero crea al menos un producto con una variante activa.</p>}
+
+    <section className="admin-movement-history" aria-labelledby="movement-history-title">
+      <div className="admin-section-heading">
+        <div><p className="admin-kicker">HISTORIAL</p><h3 id="movement-history-title">Movimientos registrados</h3><p className="admin-footnote">Últimos 100 movimientos confirmados, del más reciente al más antiguo.</p></div>
+        <button className="admin-secondary" type="button" disabled={historyLoading} onClick={() => void loadHistory()}>{historyLoading ? 'Actualizando…' : 'Actualizar'}</button>
+      </div>
+      {historyError && <p className="admin-feedback admin-feedback-error" role="alert">{historyError}</p>}
+      {historyLoading ? <p className="admin-empty">Cargando historial…</p> : history.length === 0 ? <p className="admin-empty">Todavía no hay movimientos confirmados.</p> : (
+        <div className="admin-history-list">
+          {history.map(item => <article className="admin-history-row" key={item.id}>
+            <div className="admin-history-main">
+              <strong>{item.product_name}</strong>
+              <span>{movementName[item.movement_type] ?? item.movement_type} · {item.sku}{item.size ? ' · Talla ' + item.size : ''}{item.color ? ' · ' + item.color : ''}</span>
+              <small>{dateLabel(item.created_at)}{item.reference ? ' · ' + item.reference : ''}</small>
+              {item.note && <small>{item.note}</small>}
+            </div>
+            <div className="admin-history-metrics">
+              <strong>{item.action === 'salida' ? '−' : '+'}{item.quantity} uds.</strong>
+              <span>{money(Number(item.total_usd ?? 0))}</span>
+            </div>
+          </article>)}
+        </div>
+      )}
+    </section>
   </section>
 }
