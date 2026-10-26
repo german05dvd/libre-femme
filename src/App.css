@@ -482,3 +482,38 @@ html { scroll-padding-top: 24px; }
 
 .variant-stock-note { margin: 0; color: var(--muted); font-size: 10px; letter-spacing: .04em; }
 .product-add-link:disabled { opacity: .45; cursor: not-allowed; }
+
+
+/* LIBRE femme: layered chocolate hero, ready for local WebP photography */
+.hero-editorial {
+  background:
+    radial-gradient(ellipse at 82% 18%, rgba(177, 133, 104, .32), transparent 36%),
+    radial-gradient(ellipse at 12% 88%, rgba(119, 79, 60, .42), transparent 40%),
+    linear-gradient(118deg, #35241d 0%, #4b3328 43%, #654738 72%, #493126 100%);
+}
+.hero-editorial::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: "";
+  opacity: .16;
+  background-image: repeating-linear-gradient(118deg, transparent 0 74px, rgba(255, 239, 222, .08) 75px, transparent 76px 150px);
+}
+.hero-editorial .hero-copy, .hero-editorial .hero-gallery { position: relative; z-index: 1; }
+.hero-gallery { border-radius: 8px; }
+.hero-photo-main { border-radius: 8px 8px 8px 36px; }
+.hero-photo-detail { border-radius: 6px 6px 6px 20px; border-color: #493126; box-shadow: 0 18px 44px rgba(27, 17, 12, .28); }
+.hero-photo img { background: linear-gradient(145deg, #d9c2ad, #8e6955); }
+.hero-photo.photo-fallback::before {
+  background:
+    radial-gradient(ellipse at 72% 22%, #f0dfc9 0 13%, transparent 13.5%),
+    linear-gradient(125deg, transparent 35%, #805647 35% 55%, transparent 55%),
+    linear-gradient(145deg, #d8c0ac 0%, #b48f77 48%, #765342 100%);
+}
+.gallery-stamp { background: rgba(66, 44, 34, .22); backdrop-filter: blur(4px); }
+.hero-discover { border-radius: 2px; }
+@media (max-width: 640px) {
+  .hero-photo-main { border-radius: 8px 8px 8px 28px; }
+  .hero-photo-detail { border-radius: 6px 6px 6px 16px; }
+}
