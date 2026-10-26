@@ -25,6 +25,7 @@ select
   v.id, v.product_id, v.size, v.color, v.sale_price,
   (coalesce(s.quantity_on_hand, 0) > 0) as is_available,
   v.color_hex,
+  coalesce(s.quantity_on_hand, 0)::integer as quantity_on_hand,
   coalesce(s.quantity_on_hand, 0)::integer as stock_quantity
 from public.product_variants v
 join public.products p on p.id = v.product_id
