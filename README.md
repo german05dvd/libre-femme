@@ -1,75 +1,55 @@
-# React + TypeScript + Vite
+# LIBRE femme
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web de LIBRE femme construida con React, TypeScript, Vite y Supabase.
 
-Currently, two official plugins are available:
+## Ejecutar una vista previa local
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Requisitos
+- Node.js 24 o una versión compatible con el proyecto.
+- npm.
+- Las variables públicas de conexión a Supabase para cargar los productos reales.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+### 1. Instalar dependencias
+```bash
+npm ci
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Configurar el entorno local
+Copia el archivo de ejemplo y edita `.env.local`:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+cp .env.example .env.local
 ```
+
+Completa estos dos valores con los datos del proyecto Supabase:
+
+```dotenv
+VITE_SUPABASE_URL=https://TU_PROYECTO.supabase.co
+VITE_SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA_ANON
+```
+
+Usa solo la clave pública/publishable o anon en el navegador. **Nunca** pongas una clave `service_role`, una contraseña de base de datos ni secretos en variables `VITE_*`. No subas `.env.local` a Git.
+
+Si ya existe un `.env.local` válido en tu espacio de desarrollo, no necesitas copiarlo ni reemplazarlo.
+
+### 3. Iniciar la aplicación
+```bash
+npm run dev -- --host 0.0.0.0
+```
+
+Vite mostrará la dirección local y, si trabajas en GitHub Codespaces, aparecerá la opción de abrir o reenviar el puerto **5173**. En un navegador local normalmente podrás abrir `http://localhost:5173`.
+
+Detén el servidor con `Ctrl+C`.
+
+## Comprobaciones antes de publicar
+
+```bash
+npm run lint
+npm run build
+```
+
+La aplicación necesita que las vistas, políticas y tablas de Supabase estén configuradas para la versión de código que estás probando. Ejecutar la web localmente **no** aplica migraciones a Supabase. Las migraciones deben revisarse y probarse antes de aplicarlas al proyecto real.
+
+## Flujo de trabajo
+
+Los cambios de desarrollo se trabajan en ramas y se revisan mediante Pull Requests antes de integrarlos en `main`. El despliegue público en Cloudflare Pages aún debe configurarse por separado.
