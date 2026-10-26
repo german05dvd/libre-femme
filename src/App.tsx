@@ -122,7 +122,7 @@ function App() {
   }, [cartNotice])
 
   useEffect(() => {
-    const slogans = ['Viste como te sientes.', 'Viste a tu manera.', 'Viste tu libertad.', 'Viste para ti.']
+    const slogans = ['Tu estilo, sin pedir permiso.', 'Piezas que hablan de ti.', 'Libertad para ser tú.', 'Lo que llevas, lo eliges tú.', 'Cada día, a tu manera.']
     let index = 0
     let phase: 'hold' | 'erase' | 'type' = 'hold'
     let position = slogans[0].length
@@ -226,8 +226,8 @@ function App() {
             <div className="hero-edition"><span>01 — 26</span><span>UNA EXPRESIÓN PROPIA</span></div>
           </div>
           <div className="hero-gallery" aria-label="Inspiración editorial LIBRE femme">
-            <figure className="hero-photo hero-photo-main"><img src="https://images.unsplash.com/photo-1539100387613-e6a8b7f0a5e6?auto=format&fit=crop&w=1200&q=85" alt="Inspiración de moda femenina con silueta elegante" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} /><span className="photo-label">LIBRE FEMME / EDITORIAL</span></figure>
-            <figure className="hero-photo hero-photo-detail"><img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=85" alt="Detalles de estilo y prendas femeninas" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} /><span className="photo-detail-index">FORMA · TEXTURA · ACTITUD</span></figure>
+            <figure className="hero-photo hero-photo-main"><img src="/images/hero-main.webp" alt="Inspiración de moda femenina con silueta elegante" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} /><span className="photo-label">LIBRE FEMME / EDITORIAL</span></figure>
+            <figure className="hero-photo hero-photo-detail"><img src="/images/hero-detail.webp" alt="Detalles de estilo y prendas femeninas" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.parentElement?.classList.add('photo-fallback') }} /><span className="photo-detail-index">FORMA · TEXTURA · ACTITUD</span></figure>
             <span className="gallery-stamp">VISTE<br /><em>tu esencia</em></span>
           </div>
         </section>
