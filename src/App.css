@@ -1376,3 +1376,12 @@ html { scroll-padding-top: 24px; }
 .hero-section.hero-editorial .hero-photo-main img {
   transform: translateY(6%) scale(1.12);
 }
+
+
+/* Ajuste manual v2: modelo un poco más abajo y cuadro un poco más a la izquierda */
+.hero-section.hero-editorial .hero-photo-main img {
+  transform: translateY(9%) scale(1.12);
+}
+.hero-section.hero-editorial .hero-photo-detail {
+  right: calc(12% + 3%);
+}
