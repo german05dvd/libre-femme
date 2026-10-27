@@ -1370,3 +1370,9 @@ html { scroll-padding-top: 24px; }
     width: 108px;
   }
 }
+
+
+/* Ajuste manual solicitado: bajar únicamente la foto de la modelo */
+.hero-section.hero-editorial .hero-photo-main img {
+  transform: translateY(6%) scale(1.12);
+}
