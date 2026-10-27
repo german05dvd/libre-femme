@@ -68,7 +68,7 @@ function App() {
         return
       }
       const [{ data: variantRows, error: variantError }, { data: imageRows }] = await Promise.all([
-        client.from('public_catalog_variants').select('id, product_id, size, color, color_hex, sale_price, is_available, stock_quantity'),
+        client.from('public_catalog_variants').select('id, product_id, size, color, sale_price, quantity_on_hand'),
         client.from('public_catalog_images').select('id, product_id, storage_path, alt_text, position').order('position'),
       ])
       if (cancelled) return
@@ -95,7 +95,7 @@ function App() {
           description: row.description || 'Una pieza elegida para ti.',
           variants: (variantRows ?? [])
             .filter((variant) => variant.product_id === row.id)
-            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, color_hex: variant.color_hex, sale_price: Number(variant.sale_price), is_available: Boolean(variant.is_available), stock_quantity: Math.max(0, Number(variant.stock_quantity ?? 0)) })),
+            .map((variant) => ({ id: variant.id, size: variant.size, color: variant.color, color_hex: null, sale_price: Number(variant.sale_price), is_available: Number(variant.quantity_on_hand ?? 0) > 0, stock_quantity: Math.max(0, Number(variant.quantity_on_hand ?? 0)) })),
           images,
         }
       }).filter((product) => product.variants.length > 0)
