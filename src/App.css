@@ -879,3 +879,272 @@ html { scroll-padding-top: 24px; }
   .gallery-stamp { top: 5%; right: 1%; width: 66px; height: 66px; font-size: 6px; }
   .gallery-stamp em { font-size: 13px; }
 }
+
+
+/* LIBRE femme hero v3 — one immersive fashion-campaign composition */
+.storefront { overflow-x: clip; }
+.hero-section.hero-editorial {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+  align-items: center;
+  gap: clamp(18px, 2.8vw, 48px);
+  width: 100%;
+  height: auto;
+  min-height: clamp(700px, calc(100svh - 160px), 920px);
+  padding: clamp(48px, 5.8vw, 84px) clamp(30px, 5.3vw, 88px) clamp(38px, 4.5vw, 66px);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 77% 45%, rgba(183, 139, 107, .35), transparent 42%),
+    radial-gradient(ellipse at 48% 100%, rgba(157, 111, 82, .22), transparent 35%),
+    linear-gradient(110deg, #35231b 0%, #4a3024 44%, #684735 78%, #583a2b 100%);
+}
+.hero-section.hero-editorial::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  background:
+    linear-gradient(114deg, transparent 0 48%, rgba(190, 151, 119, .74) 48% 64%, transparent 64%),
+    linear-gradient(116deg, transparent 0 62%, rgba(39, 24, 18, .15) 62% 76%, transparent 76%),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255, 240, 222, .012) 3px 4px);
+  pointer-events: none;
+}
+.hero-section.hero-editorial::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(34, 21, 15, .18), transparent 58%, rgba(34, 21, 15, .08));
+}
+.hero-section.hero-editorial > .hero-copy,
+.hero-section.hero-editorial > .hero-gallery { position: relative; z-index: 1; }
+.hero-section.hero-editorial .hero-copy {
+  align-self: center;
+  max-width: 700px;
+  padding: 0;
+  margin: 0;
+}
+.hero-section.hero-editorial .hero-copy .eyebrow {
+  margin-bottom: clamp(26px, 3.3vw, 46px);
+  font-size: 9px;
+  letter-spacing: .2em;
+}
+.hero-section.hero-editorial .hero-copy h1 {
+  max-width: 760px;
+  min-height: 0;
+  margin: 0;
+  font-size: clamp(68px, 7.1vw, 118px);
+  line-height: .91;
+  letter-spacing: -.075em;
+  text-wrap: balance;
+  overflow-wrap: normal;
+}
+.hero-section.hero-editorial .type-caret { height: .72em; margin-left: .07em; }
+.hero-section.hero-editorial .hero-description {
+  max-width: 390px;
+  margin: clamp(22px, 2.4vw, 34px) 0 28px;
+  color: rgba(248, 238, 226, .82);
+  font-size: clamp(12px, .9vw, 14px);
+  line-height: 1.9;
+}
+.hero-section.hero-editorial .hero-discover {
+  gap: 32px;
+  font-size: 10px;
+}
+.hero-section.hero-editorial .hero-edition {
+  position: static;
+  display: flex;
+  justify-content: space-between;
+  max-width: 430px;
+  gap: 18px;
+  margin-top: clamp(40px, 5vw, 72px);
+  font-size: 8px;
+}
+.hero-section.hero-editorial .hero-gallery {
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  isolation: isolate;
+  overflow: visible;
+}
+/* The model is the campaign image, not a framed photo. Let the background flow behind it. */
+.hero-section.hero-editorial .hero-photo-main {
+  position: absolute;
+  z-index: 1;
+  top: -5%;
+  right: 13%;
+  bottom: -5%;
+  left: -15%;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.hero-section.hero-editorial .hero-photo-main img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  background: transparent !important;
+  filter: drop-shadow(0 18px 18px rgba(25, 14, 9, .18));
+  transform: scale(1.04);
+  transform-origin: center bottom;
+}
+.hero-section.hero-editorial .hero-photo-main .photo-label { display: none; }
+/* The brand card sits within the same visual field, as a small campaign inset. */
+.hero-section.hero-editorial .hero-photo-detail {
+  position: absolute;
+  z-index: 2;
+  top: 49%;
+  right: -1%;
+  width: clamp(142px, 17vw, 238px);
+  height: auto;
+  aspect-ratio: 800 / 756;
+  margin: 0;
+  overflow: hidden;
+  border: 5px solid rgba(65, 42, 31, .92);
+  border-radius: 3px;
+  background: #b99579;
+  box-shadow: 0 18px 44px rgba(27, 16, 10, .2);
+  transform: translateY(-4%);
+}
+.hero-section.hero-editorial .hero-photo-detail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: transparent;
+}
+.hero-section.hero-editorial .photo-detail-index {
+  left: 9px;
+  bottom: 8px;
+  font-size: 6px;
+  letter-spacing: .12em;
+}
+.hero-section.hero-editorial .gallery-stamp {
+  top: 20%;
+  right: 2%;
+  width: 82px;
+  height: 82px;
+  border-color: rgba(241, 218, 194, .6);
+  background: rgba(73, 48, 35, .12);
+  transform: none;
+  animation: none;
+}
+@media (min-width: 1500px) {
+  .hero-section.hero-editorial { min-height: clamp(820px, calc(100svh - 160px), 1000px); }
+  .hero-section.hero-editorial .hero-copy h1 { font-size: clamp(108px, 7.2vw, 138px); }
+  .hero-section.hero-editorial .hero-photo-detail { width: clamp(210px, 16vw, 270px); }
+}
+@media (max-width: 900px) and (min-width: 621px) {
+  .hero-section.hero-editorial {
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    min-height: clamp(700px, calc(100svh - 130px), 850px);
+    padding: 48px 30px 44px;
+    gap: 12px;
+  }
+  .hero-section.hero-editorial .hero-copy h1 { font-size: clamp(56px, 7.3vw, 78px); }
+  .hero-section.hero-editorial .hero-photo-main { left: -18%; right: 7%; }
+  .hero-section.hero-editorial .hero-photo-detail { width: clamp(125px, 21vw, 175px); right: -2%; }
+  .hero-section.hero-editorial .gallery-stamp { width: 68px; height: 68px; top: 18%; font-size: 6px; }
+}
+@media (max-width: 620px) {
+  .hero-section.hero-editorial {
+    display: block;
+    min-height: max(790px, calc(100svh - 64px));
+    padding: 42px 23px 30px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 78% 72%, rgba(184, 137, 104, .32), transparent 48%),
+      linear-gradient(145deg, #35231b 0%, #4a3024 58%, #674735 100%);
+  }
+  .hero-section.hero-editorial::before {
+    background:
+      linear-gradient(120deg, transparent 0 45%, rgba(190, 151, 119, .5) 45% 62%, transparent 62%),
+      linear-gradient(120deg, transparent 0 70%, rgba(39, 24, 18, .16) 70% 82%, transparent 82%),
+      repeating-linear-gradient(0deg, transparent 0 3px, rgba(255, 240, 222, .012) 3px 4px);
+  }
+  .hero-section.hero-editorial .hero-copy {
+    position: relative;
+    z-index: 3;
+    width: min(100%, 440px);
+    max-width: 100%;
+  }
+  .hero-section.hero-editorial .hero-copy .eyebrow { margin-bottom: 25px; font-size: 7px; }
+  .hero-section.hero-editorial .hero-copy h1 {
+    max-width: 100%;
+    font-size: clamp(54px, 12.4vw, 76px);
+    line-height: .94;
+    letter-spacing: -.07em;
+  }
+  .hero-section.hero-editorial .hero-description {
+    max-width: 290px;
+    margin: 20px 0 22px;
+    font-size: 11px;
+    line-height: 1.75;
+  }
+  .hero-section.hero-editorial .hero-discover { font-size: 9px; }
+  .hero-section.hero-editorial .hero-edition {
+    position: absolute;
+    z-index: 4;
+    right: 23px;
+    bottom: 17px;
+    left: 23px;
+    max-width: none;
+    margin: 0;
+    font-size: 7px;
+  }
+  .hero-section.hero-editorial .hero-gallery {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 61%;
+    min-height: 0;
+    opacity: 1;
+    pointer-events: none;
+  }
+  .hero-section.hero-editorial .hero-photo-main {
+    top: -5%;
+    right: 12%;
+    bottom: -3%;
+    left: 3%;
+  }
+  .hero-section.hero-editorial .hero-photo-main img {
+    object-position: center bottom;
+    transform: scale(1.08);
+  }
+  .hero-section.hero-editorial .hero-photo-detail {
+    top: 48%;
+    right: 4%;
+    width: clamp(112px, 30vw, 150px);
+    border-width: 4px;
+    transform: none;
+  }
+  .hero-section.hero-editorial .photo-detail-index { display: none; }
+  .hero-section.hero-editorial .gallery-stamp {
+    top: 12%;
+    right: 5%;
+    width: 61px;
+    height: 61px;
+    font-size: 6px;
+    letter-spacing: .12em;
+  }
+  .hero-section.hero-editorial .gallery-stamp em { font-size: 12px; }
+}
+@media (max-width: 390px) {
+  .hero-section.hero-editorial { min-height: max(760px, calc(100svh - 64px)); padding-inline: 19px; }
+  .hero-section.hero-editorial .hero-copy h1 { font-size: clamp(49px, 12.3vw, 58px); }
+  .hero-section.hero-editorial .hero-photo-main { right: 9%; left: -3%; }
+  .hero-section.hero-editorial .hero-photo-detail { width: 108px; right: 3%; }
+  .hero-section.hero-editorial .hero-edition { right: 19px; left: 19px; }
+}
