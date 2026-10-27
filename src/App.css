@@ -1385,3 +1385,22 @@ html { scroll-padding-top: 24px; }
 .hero-section.hero-editorial .hero-photo-detail {
   right: calc(12% + 3%);
 }
+
+/* Hero: reserve the headline space so the typewriter never shifts the copy below it. */
+.hero-section.hero-editorial .hero-copy h1 {
+  height: 2.1em;
+  min-height: 2.1em;
+  overflow: visible;
+}
+@media (max-width: 900px) and (min-width: 621px) {
+  .hero-section.hero-editorial .hero-copy h1 {
+    height: 2.85em;
+    min-height: 2.85em;
+  }
+}
+@media (max-width: 620px) {
+  .hero-section.hero-editorial .hero-copy h1 {
+    height: 2.85em;
+    min-height: 2.85em;
+  }
+}
