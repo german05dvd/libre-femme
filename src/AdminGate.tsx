@@ -374,7 +374,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
             </label>}
             <div className="admin-field-wide admin-form-actions">
               <button className="admin-submit" type="submit" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Crear producto y variante'} <span aria-hidden="true">↗</span></button>
-              <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos.</p>
+              <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos. La cantidad disponible se registra en «Registro de movimientos»: elige «Entrada de mercancía / compra», selecciona esta variante e indica las unidades y el coste total del lote. Sin una entrada confirmada, la tienda la mostrará como agotada.</p>
             </div>
           </form>
           {form.id && (
