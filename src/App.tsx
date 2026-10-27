@@ -288,7 +288,7 @@ function App() {
           <div className="details-signature"><span>LIBRE femme</span><span>Elegido por ti. A tu manera.</span><span>LA HABANA · CUBA</span></div>
         </section>
       </main>
-      <footer className="site-footer"><a className="wordmark footer-wordmark" href="#inicio">LIBRE <span>femme</span></a><p>Vestir con libertad, vivir con intención.</p><span>© 2026 LIBRE femme</span></footer>
+
 
       {cartOpen && <div className="drawer-backdrop" role="presentation" onClick={() => setCartOpen(false)}><aside className="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" onClick={(event) => event.stopPropagation()}>
         <div className="drawer-heading"><div><p className="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Tu bolsa <span>({cartCount})</span></h2></div><button className="close-drawer" type="button" onClick={() => setCartOpen(false)} aria-label="Cerrar bolsa">×</button></div>
