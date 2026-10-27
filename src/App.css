@@ -1404,3 +1404,10 @@ html { scroll-padding-top: 24px; }
     min-height: 2.85em;
   }
 }
+
+/* On small screens, keep the hero focused on the message and imagery. */
+@media (max-width: 620px) {
+  .hero-section.hero-editorial .hero-discover {
+    display: none;
+  }
+}
