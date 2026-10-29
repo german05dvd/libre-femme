@@ -18,7 +18,7 @@ type Product = {
   category: string
   description: string
   variants: Variant[]
-  images: { url: string; alt: string; variant_id: string | null }[]
+  images: { url: string; alt: string; color_hex: string | null }[]
 }
 type CartLine = { key: string; product: Product; variant: Variant; quantity: number }
 
@@ -82,7 +82,7 @@ function App() {
       ])
       const [{ data: colorRows, error: colorError }, { data: variantImageRows, error: variantImageError }] = await Promise.all([
         client.from('public_catalog_variant_colors').select('id, color_hex'),
-        client.from('public_catalog_variant_images').select('id, product_id, variant_id, storage_path, alt_text, position').order('position'),
+        client.from('public_catalog_variant_images').select('id, product_id, color_hex, storage_path, alt_text, position').order('position'),
       ])
       if (cancelled) return
       if (variantError) {
@@ -96,7 +96,7 @@ function App() {
         return
       }
       const nextProducts: Product[] = (productRows ?? []).map((row) => {
-        const productImages = (imageRows ?? []).filter((item) => item.product_id === row.id).map((image) => ({ ...image, variant_id: null as string | null }))
+        const productImages = (imageRows ?? []).filter((item) => item.product_id === row.id).map((image) => ({ ...image, color_hex: null as string | null }))
         const variantImages = (variantImageRows ?? []).filter((item) => item.product_id === row.id)
         const images = [...productImages, ...variantImages]
           .map((image) => {
@@ -104,7 +104,7 @@ function App() {
             const url = imagePath.startsWith('https://') || imagePath.startsWith('http://')
               ? imagePath
               : client.storage.from('product-images').getPublicUrl(imagePath).data.publicUrl
-            return { url, alt: image.alt_text || row.name, variant_id: image.variant_id }
+            return { url, alt: image.alt_text || row.name, color_hex: image.color_hex }
           })
         return {
           id: row.id,
@@ -287,7 +287,7 @@ function App() {
               return <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
                 <div className={`product-art product-art-${visualColor}`}>
                   <span className="product-number">{String(index + 1).padStart(2, '0')}</span>
-                  {(() => { const gallery = product.images.some(image => image.variant_id === selectedVariant.id) ? product.images.filter(image => image.variant_id === selectedVariant.id) : product.images.filter(image => image.variant_id === null); return gallery.length > 0 ? <>
+                  {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 0 ? <>
                     <img className="catalog-product-image" src={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].url} alt={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].alt} loading="lazy" />
                     {gallery.length > 1 && <div className="product-gallery-controls" aria-label={`Fotografías de ${product.name}`}>
                       <button type="button" aria-label="Fotografía anterior" onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: ((current[product.id] ?? 0) - 1 + gallery.length) % gallery.length }))}>‹</button>
@@ -297,7 +297,7 @@ function App() {
                   </> : <div className="garment-shape" aria-hidden="true"><span /></div> })()}
                   <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
-                {(() => { const gallery = product.images.some(image => image.variant_id === selectedVariant.id) ? product.images.filter(image => image.variant_id === selectedVariant.id) : product.images.filter(image => image.variant_id === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
+                {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
                   {gallery.map((image, imageIndex) => <button key={image.url} type="button" className={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex ? 'active' : ''} aria-label={`Ver fotografía ${imageIndex + 1}`} aria-pressed={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex} onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: imageIndex }))}><img src={image.url} alt="" loading="lazy" /></button>)}
                 </div> })()}
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
