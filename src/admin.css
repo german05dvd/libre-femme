@@ -474,3 +474,28 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-module-nav button, .admin-submit, .admin-secondary, .admin-signout { transition: none; }
 }
+
+
+.admin-image-variant-label {
+  display: grid;
+  gap: 8px;
+  max-width: 520px;
+  margin: 18px 0 8px;
+  color: #624636;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-image-variant-label select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #ded4c9;
+  border-radius: 6px;
+  background: #fffefa;
+  color: #4b3328;
+  font: inherit;
+}
+.admin-image-variant-label select:focus-visible {
+  outline: 2px solid #b17b61;
+  outline-offset: 2px;
+}
