@@ -295,7 +295,6 @@ function App() {
                       <button type="button" aria-label="Fotografía siguiente" onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: ((current[product.id] ?? 0) + 1) % gallery.length }))}>›</button>
                     </div>}
                   </> : <div className="garment-shape" aria-hidden="true"><span /></div> })()}
-                  {false ? <div className="garment-shape" aria-hidden="true"><span /></div> : null}
                   <button className="quick-add" type="button" onClick={() => addToCart(product)} aria-label={`Añadir ${product.name} a la bolsa`}>+ Añadir</button>
                 </div>
                 {(() => { const gallery = product.images.some(image => image.variant_id === selectedVariant.id) ? product.images.filter(image => image.variant_id === selectedVariant.id) : product.images.filter(image => image.variant_id === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
