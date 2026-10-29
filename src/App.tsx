@@ -24,6 +24,15 @@ type CartLine = { key: string; product: Product; variant: Variant; quantity: num
 
 const whatsappNumber = '5358352149'
 const colorNames: Record<string, string> = { rose: 'rosa arcilla', chocolate: 'chocolate', cream: 'crema', sand: 'arena', olive: 'oliva', clay: 'arcilla', plum: 'ciruela' }
+const publicColorHex: Record<string, string> = {
+  negro: '#22201e', black: '#22201e',
+  blanco: '#fffdf8', white: '#fffdf8',
+  verde: '#648b68', green: '#648b68',
+  marron: '#55351f', marrón: '#55351f', brown: '#55351f', carmelita: '#a66f43',
+  rosa: '#c98f91', rosado: '#c98f91', pink: '#c98f91',
+  beige: '#d8c5a9', arena: '#d8c5a9', crema: '#f0e6d6', cream: '#f0e6d6',
+  azul: '#6e8eae', blue: '#6e8eae', gris: '#92918d', gray: '#92918d', grey: '#92918d',
+}
 const fallbackColors = ['rose', 'sand', 'olive', 'clay', 'cream', 'plum']
 const categories = ['Todo']
 
@@ -268,7 +277,7 @@ function App() {
                 <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
-                  {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} style={variant?.color_hex ? { backgroundColor: variant.color_hex } : undefined} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
+                  {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} style={(variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')]) ? { backgroundColor: variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] } : undefined} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
                   <p className="variant-stock-note">{selectedVariant.stock_quantity > 0 ? `Disponible · ${selectedVariant.stock_quantity} ${selectedVariant.stock_quantity === 1 ? 'unidad' : 'unidades'}` : "Agotado por el momento"}</p><button className="product-add-link" type="button" disabled={!selectedVariant.is_available} onClick={() => addToCart(product)}>{selectedVariant.is_available ? "Añadir a la bolsa" : "Agotado"} <span>↗</span></button>
                 </div>
               </article>
