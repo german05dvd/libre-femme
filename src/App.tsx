@@ -203,11 +203,27 @@ function App() {
   }
 
   const whatsappMessage = [
-    'Hola, le escribo para solicitar un pedido de:',
-    ...cartItems.map(({ product, variant, quantity }) => '• ' + product.name + (variant.size ? ' · talla ' + variant.size : '') + (variant.color ? ' · color ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : '') + ' × ' + quantity + ' — ' + formatPrice(variant.sale_price * quantity)),
-    `Total estimado: ${formatPrice(cartTotal)} USD`,
-    '¿Podemos confirmar disponibilidad y detalles de entrega?',
-  ].join('\\n')
+    'Hola, LIBRE femme. Quisiera consultar este pedido:',
+    '',
+    ...cartItems.map(({ product, variant, quantity }) => {
+      const details = [
+        variant.size ? 'Talla ' + variant.size : '',
+        variant.color ? 'Color ' + (colorNames[variant.color.toLowerCase()] ?? variant.color) : '',
+      ].filter(Boolean)
+      return [
+        '• ' + product.name,
+        details.length ? '  ' + details.join(' · ') : '',
+        '  Cantidad: ' + quantity,
+        '  Precio: ' + formatPrice(variant.sale_price) + ' c/u',
+        '  Subtotal: ' + formatPrice(variant.sale_price * quantity),
+      ].filter(Boolean).join('\n')
+    }),
+    '',
+    'Subtotal estimado: ' + formatPrice(cartTotal) + ' USD',
+    'La disponibilidad y la entrega están pendientes de confirmación.',
+    '',
+    '¿Me ayudan a confirmar este pedido, por favor?',
+  ].filter((line, index, lines) => line !== '' || (index > 0 && lines[index - 1] !== '')).join('\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
   return (
