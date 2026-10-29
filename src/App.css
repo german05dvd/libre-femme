@@ -1411,3 +1411,16 @@ html { scroll-padding-top: 24px; }
     display: none;
   }
 }
+
+
+/* Catalog refinement: make the price easier to read and preserve color distinctions. */
+.product-info .product-price {
+  font-size: clamp(14px, 1.1vw, 16px);
+  font-weight: 500;
+  letter-spacing: -.02em;
+}
+@media (max-width: 620px) {
+  .product-info .product-price {
+    font-size: 14px;
+  }
+}
