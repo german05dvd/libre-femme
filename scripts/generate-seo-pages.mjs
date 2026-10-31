@@ -99,14 +99,14 @@ async function main() {
     const pageHtml = baseHtml
       .replace(/<title>[\s\S]*?<\/title>/, '')
       .replace(/<meta name="description"[^>]*>/, '')
-      .replace('</head>', \`\${meta(title, description, canonical, structuredData)}\n  </head>\`)
+      .replace('</head>', meta(title, description, canonical, structuredData) + '\n  </head>')
       .replace('<div id="root"></div>', `<div id="root">${fallback}</div>`)
     const outputPath = join(process.cwd(), 'dist', 'categoria', slug, 'index.html')
     await mkdir(dirname(outputPath), { recursive: true })
     await writeFile(outputPath, pageHtml)
   }
 
-  const sitemap = \`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n\${sitemapUrls.map((url) => \`  <url><loc>\${url}</loc></url>\`).join('\n')}\n</urlset>\n\`
+  const sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + sitemapUrls.map((url) => '  <url><loc>' + url + '</loc></url>').join('\n') + '\n</urlset>\n'
   await writeFile(join(process.cwd(), 'dist', 'sitemap.xml'), sitemap)
   console.log(`Generated ${categories.size} SEO category pages and sitemap with ${sitemapUrls.length} URLs.`)
 }
