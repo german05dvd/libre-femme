@@ -34,7 +34,8 @@ async function main() {
   const distIndexPath = join(process.cwd(), 'dist', 'index.html')
   const baseHtml = await readFile(distIndexPath, 'utf8')
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('SEO page generation requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the build environment.')
+    console.warn('Skipping category SEO generation: Supabase build variables are not available. The checked-in homepage sitemap remains in place.')
+    return
   }
 
   const response = await fetch(`${supabaseUrl}/rest/v1/public_catalog_products?select=id,name,slug,description,category&order=name.asc`, {
