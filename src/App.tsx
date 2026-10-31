@@ -36,12 +36,17 @@ const publicColorHex: Record<string, string> = {
 const fallbackColors = ['rose', 'sand', 'olive', 'clay', 'cream', 'plum']
 const categories = ['Todo']
 
+function slugifyCategory(value: string) {
+  return value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
 function formatPrice(price: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(price)
 }
 
 function App() {
   const [products, setProducts] = useState<Product[]>([])
+  const categoryPath = window.location.pathname.match(/^\/categoria\/([^/]+)\/?$/)?.[1] ?? null
   const [activeCategory, setActiveCategory] = useState('Todo')
   const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
@@ -119,6 +124,10 @@ function App() {
         }
       }).filter((product) => product.variants.length > 0)
       setProducts(nextProducts)
+      if (categoryPath) {
+        const requestedCategory = nextProducts.find((product) => slugifyCategory(product.category) === categoryPath)?.category
+        if (requestedCategory) setActiveCategory(requestedCategory)
+      }
       setLoading(false)
     }
     void loadCatalog()
@@ -166,6 +175,7 @@ function App() {
   }, [])
 
   const availableCategories = useMemo(() => [...categories, ...new Set(products.map((product) => product.category).filter(Boolean))], [products])
+  const categoryLanding = categoryPath ? products.find((product) => slugifyCategory(product.category) === categoryPath)?.category ?? null : null
   const visibleProducts = useMemo(
     () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
     [products, activeCategory, searchTerm],
@@ -268,7 +278,8 @@ function App() {
         </section>
 
         <section className="collection-section section-wrap" id="coleccion">
-          <div className="section-heading"><div><p className="eyebrow">SELECCIÓN LIBRE</p><h2>Nuestros <em>productos.</em></h2></div><p className="section-intro">Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.</p></div>
+          <div className="section-heading"><div><p className="eyebrow">{categoryLanding ? 'COLECCIÓN POR CATEGORÍA' : 'SELECCIÓN LIBRE'}</p><h2>{categoryLanding ? <>{categoryLanding} <em>para ti.</em></> : <>Nuestros <em>productos.</em></>}</h2></div><p className="section-intro">{categoryLanding ? `Descubre nuestra selección de ${categoryLanding.toLocaleLowerCase('es')} en LIBRE femme. Moda femenina en Cuba, elegida para expresar tu estilo a tu manera.` : 'Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.'}</p></div>
+          <nav className="category-filters category-seo-links" aria-label="Explorar categorías">{availableCategories.filter((category) => category !== 'Todo').map((category) => <a key={category} href={`/categoria/${slugifyCategory(category)}/`} className={categoryLanding === category ? 'filter-chip active' : 'filter-chip'} aria-current={categoryLanding === category ? 'page' : undefined}>{category}</a>)}</nav>
           <div className="collection-toolbar">
             <label className="product-search"><span className="sr-only">Buscar prendas</span><span className="search-icon" aria-hidden="true">⌕</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar una prenda…" /></label>
             <div className="category-filters" role="group" aria-label="Filtrar por categoría">
