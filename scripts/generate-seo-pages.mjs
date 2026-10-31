@@ -2,11 +2,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 const siteUrl = 'https://libre-femme.com'
-const supabaseUrl = process.env.VITE_SUPABASE_URL?.replace(/\\/$/, '')
+const supabaseUrl = process.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
 
 function slugify(value) {
-  return value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
 function escapeHtml(value = '') {
@@ -97,16 +97,16 @@ async function main() {
         </section>
       </main>`
     const pageHtml = baseHtml
-      .replace(/<title>[\\s\\S]*?<\\/title>/, '')
+      .replace(/<title>[\s\S]*?<\/title>/, '')
       .replace(/<meta name="description"[^>]*>/, '')
-      .replace('</head>', `${meta(title, description, canonical, structuredData)}\\n  </head>`)
+      .replace('</head>', \`\${meta(title, description, canonical, structuredData)}\n  </head>\`)
       .replace('<div id="root"></div>', `<div id="root">${fallback}</div>`)
     const outputPath = join(process.cwd(), 'dist', 'categoria', slug, 'index.html')
     await mkdir(dirname(outputPath), { recursive: true })
     await writeFile(outputPath, pageHtml)
   }
 
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\\n${sitemapUrls.map((url) => `  <url><loc>${url}</loc></url>`).join('\\n')}\\n</urlset>\\n`
+  const sitemap = \`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n\${sitemapUrls.map((url) => \`  <url><loc>\${url}</loc></url>\`).join('\n')}\n</urlset>\n\`
   await writeFile(join(process.cwd(), 'dist', 'sitemap.xml'), sitemap)
   console.log(`Generated ${categories.size} SEO category pages and sitemap with ${sitemapUrls.length} URLs.`)
 }
