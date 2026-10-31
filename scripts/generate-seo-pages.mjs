@@ -100,6 +100,8 @@ async function main() {
     const pageHtml = baseHtml
       .replace(/<title>[\s\S]*?<\/title>/, '')
       .replace(/<meta name="description"[^>]*>/, '')
+      .replace(/<link rel="canonical"[^>]*>/, '')
+      .replace(/<meta property="og:(title|description|url)"[^>]*>/g, '')
       .replace('</head>', meta(title, description, canonical, structuredData) + '\n  </head>')
       .replace('<div id="root"></div>', `<div id="root">${fallback}</div>`)
     const outputPath = join(process.cwd(), 'dist', 'categoria', slug, 'index.html')
