@@ -37,7 +37,7 @@ const fallbackColors = ['rose', 'sand', 'olive', 'clay', 'cream', 'plum']
 const categories = ['Todo']
 
 function slugifyCategory(value: string) {
-  return value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
 function formatPrice(price: number) {
