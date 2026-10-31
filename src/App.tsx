@@ -132,7 +132,7 @@ function App() {
     }
     void loadCatalog()
     return () => { cancelled = true }
-  }, [])
+  }, [categoryPath])
 
   useEffect(() => {
     if (!cartOpen) return
