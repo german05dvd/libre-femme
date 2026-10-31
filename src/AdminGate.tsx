@@ -31,7 +31,7 @@ type Product = {
   category: string | null
   status: ProductStatus
   product_variants: Variant[]
-  product_images?: { id: string; storage_path: string; alt_text: string | null; position: number }[]
+  product_images?: { id: string; storage_path: string; alt_text: string | null; position: number; color_hex: string | null }[]
 }
 type ProductForm = {
   id: string
@@ -112,6 +112,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
   const [saving, setSaving] = useState(false)
   const [busyProduct, setBusyProduct] = useState('')
   const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imageColorHex, setImageColorHex] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -128,7 +129,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
     } else {
       const { data: images, error: imageError } = await supabase
         .from('product_images')
-        .select('id, product_id, storage_path, alt_text, position')
+        .select('id, product_id, color_hex, storage_path, alt_text, position')
         .order('position')
       if (imageError) setError('Se cargaron los productos, pero no las imágenes: ' + imageError.message)
       const imageRows = images ?? []
@@ -231,7 +232,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
           break
         }
         const { error: imageRecordError } = await supabase.from('product_images').insert({
-          product_id: productId, storage_path: storagePath, alt_text: form.name.trim() || null, position: uploadedDuringCreate,
+          product_id: productId, storage_path: storagePath, alt_text: form.name.trim() || null, position: uploadedDuringCreate, color_hex: null,
         })
         if (imageRecordError) {
           await supabase.storage.from('product-images').remove([storagePath])
@@ -281,6 +282,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
         storage_path: storagePath,
         alt_text: form.name.trim() || null,
         position,
+        color_hex: imageColorHex || null,
       })
       if (recordError) {
         await supabase.storage.from('product-images').remove([storagePath])
@@ -374,7 +376,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
             </label>}
             <div className="admin-field-wide admin-form-actions">
               <button className="admin-submit" type="submit" disabled={saving}>{saving ? 'Guardando…' : form.id ? 'Guardar cambios' : 'Crear producto y variante'} <span aria-hidden="true">↗</span></button>
-              <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos.</p>
+              <p className="admin-footnote">Los productos nuevos quedan como borrador. No aparecen en la tienda hasta publicarlos. La cantidad disponible se registra en «Registro de movimientos»: elige «Entrada de mercancía / compra», selecciona esta variante e indica las unidades y el coste total del lote. Sin una entrada confirmada, la tienda la mostrará como agotada.</p>
             </div>
           </form>
           {form.id && (
@@ -390,6 +392,13 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
                 <div><p className="admin-kicker">IMAGEN DEL PRODUCTO</p><h3>Fotografías</h3></div>
               </div>
               <p className="admin-footnote">Puedes seleccionar varias fotografías. Formatos: JPEG, PNG, WebP o AVIF; máximo 10 MB por archivo. La primera fotografía queda como portada de forma predeterminada.</p>
+              <label className="admin-image-variant-label">Mostrar estas fotografías en
+                <select value={imageColorHex} onChange={event => setImageColorHex(event.target.value)}>
+                  <option value="">Todos los colores (fotos generales)</option>
+                  {Array.from(new Map((products.find(product => product.id === form.id)?.product_variants ?? []).filter(variant => variant.color && variant.color_hex).map(variant => [variant.color_hex!.trim().toLowerCase(), { key: variant.color_hex!.trim().toLowerCase(), name: variant.color!, hex: variant.color_hex! }])).values()).map(color => <option key={color.key} value={color.hex}>{color.name} · {color.hex}</option>)}
+                </select>
+              </label>
+              <p className="admin-footnote">Las fotos se asociarán al color, no a una talla concreta. Si eliges “Todos los colores”, servirán como fotos generales cuando un color no tenga fotos propias.</p>
               <div className="admin-image-upload">
                 <label>Elegir fotografías
                   <input id="product-image-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setImageFiles(Array.from(event.target.files ?? []))} />
@@ -407,7 +416,7 @@ function ProductManagement({ email, onSignOut }: { email: string; onSignOut: () 
                         {imageUrl && <img src={imageUrl} alt={image.alt_text || `Fotografía ${index + 1} de ${form.name}`} loading="lazy" />}
                         <div className="admin-image-card-info">
                           <span>{index === 0 ? 'Portada' : `Fotografía ${index + 1}`}</span>
-                          <small>{image.alt_text || image.storage_path.split('/').pop()}</small>
+                          <small>{image.color_hex ? 'Color · ' + image.color_hex : 'Foto general (todos los colores)'} · {image.alt_text || image.storage_path.split('/').pop()}</small>
                           <button className="admin-secondary admin-danger-action" type="button" disabled={uploadingImage} onClick={() => void deleteProductImage(image)}>Eliminar</button>
                         </div>
                       </li>

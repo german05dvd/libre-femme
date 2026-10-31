@@ -1,22 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase'
 
-type Movement = {
+type FinancialEntry = {
   id: string
   created_at: string
-  movement_type: 'purchase_receipt' | 'sale' | 'adjustment_in' | 'adjustment_out'
-  action: 'entrada' | 'salida'
-  product_name: string
-  sku: string
-  size: string | null
-  color: string | null
-  quantity: number
-  unit_price_usd: number | null
-  total_usd: number | null
-  unit_cost_usd: number
-  cost_of_sale_usd: number | null
-  unit_sale_price_usd: number | null
-  note: string | null
+  entry_type: 'purchase' | 'sale' | 'adjustment_in' | 'adjustment_out'
+  status: string
+  reference: string | null
+  notes: string | null
+  purchase_total_usd: number | null
+  sales_total_usd: number | null
+  cost_of_sales_usd: number | null
+  unit_count: number
 }
 type Period = 'today' | '3days' | 'week' | 'month' | 'quarter' | 'halfyear' | 'year' | 'custom'
 const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0))
@@ -25,9 +20,9 @@ const dateInput = (date: Date) => {
   return `${year}-${month}-${day}`
 }
 const dateLabel = (value: string) => new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
-const movementLabel: Record<Movement['movement_type'], string> = {
-  purchase_receipt: 'Entrada de compra',
-  sale: 'Venta confirmada',
+const entryLabel: Record<FinancialEntry['entry_type'], string> = {
+  purchase: 'Compra de lote',
+  sale: 'Venta registrada',
   adjustment_in: 'Ajuste de entrada',
   adjustment_out: 'Ajuste de salida',
 }
@@ -36,7 +31,6 @@ function getRange(period: Period, from: string, to: string) {
   end.setHours(23, 59, 59, 999)
   const start = new Date()
   start.setHours(0, 0, 0, 0)
-  if (period === 'today') { /* start remains today */ }
   if (period === '3days') start.setDate(start.getDate() - 2)
   if (period === 'week') start.setDate(start.getDate() - 6)
   if (period === 'month') start.setDate(1)
@@ -57,7 +51,7 @@ function getRange(period: Period, from: string, to: string) {
 }
 
 export default function AdminRegister() {
-  const [movements, setMovements] = useState<Movement[]>([])
+  const [entries, setEntries] = useState<FinancialEntry[]>([])
   const [period, setPeriod] = useState<Period>('month')
   const [from, setFrom] = useState(() => dateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [to, setTo] = useState(() => dateInput(new Date()))
@@ -66,41 +60,41 @@ export default function AdminRegister() {
   const range = useMemo(() => getRange(period, from, to), [period, from, to])
 
   const load = useCallback(async () => {
-    if (!supabase || !range) { setMovements([]); setLoading(false); return }
+    if (!supabase || !range) { setEntries([]); setLoading(false); return }
     setLoading(true)
     const { data, error: queryError } = await supabase
-      .from('admin_inventory_register')
-      .select('id,created_at,movement_type,action,product_name,sku,size,color,quantity,unit_price_usd,total_usd,unit_cost_usd,cost_of_sale_usd,unit_sale_price_usd,note')
+      .from('admin_financial_entries')
+      .select('id,created_at,entry_type,status,reference,notes,purchase_total_usd,sales_total_usd,cost_of_sales_usd,unit_count')
       .gte('created_at', range.start)
       .lt('created_at', range.end)
       .order('created_at', { ascending: false })
     if (queryError) {
-      setError('No se pudo cargar el libro de movimientos: ' + queryError.message)
-      setMovements([])
+      setError('No se pudo cargar el resumen financiero: ' + queryError.message)
+      setEntries([])
     } else {
       setError('')
-      setMovements((data ?? []) as Movement[])
+      setEntries((data ?? []) as FinancialEntry[])
     }
     setLoading(false)
   }, [range])
 
   useEffect(() => { void Promise.resolve().then(load) }, [load])
 
-  const summary = useMemo(() => movements.reduce((totals, movement) => {
-    const amount = Number(movement.total_usd ?? 0)
-    if (movement.movement_type === 'sale') {
-      totals.sales += amount
-      totals.costOfSales += Number(movement.cost_of_sale_usd ?? movement.unit_cost_usd ?? 0)
+  const summary = useMemo(() => entries.reduce((totals, entry) => {
+    if (entry.status !== 'confirmed') return totals
+    if (entry.entry_type === 'purchase') totals.purchases += Number(entry.purchase_total_usd ?? 0)
+    if (entry.entry_type === 'sale') {
+      totals.sales += Number(entry.sales_total_usd ?? 0)
+      totals.costOfSales += Number(entry.cost_of_sales_usd ?? 0)
     }
-    if (movement.movement_type === 'purchase_receipt') totals.purchases += amount
     return totals
-  }, { sales: 0, purchases: 0, costOfSales: 0 }), [movements])
+  }, { sales: 0, purchases: 0, costOfSales: 0 }), [entries])
 
   return <div className="admin-purchases">
     {error && <p className="admin-feedback admin-feedback-error" role="alert">{error}</p>}
     <section className="admin-section">
       <div className="admin-section-heading">
-        <div><p className="admin-kicker">HISTORIAL CONTABLE Y DE INVENTARIO</p><h2>Libro de movimientos</h2></div>
+        <div><p className="admin-kicker">RESULTADOS DEL NEGOCIO</p><h2>Resumen financiero</h2></div>
         <button className="admin-secondary" type="button" onClick={() => void load()} disabled={loading}>{loading ? 'Actualizando…' : 'Actualizar'}</button>
       </div>
       <div className="admin-product-form admin-register-filters">
@@ -111,30 +105,35 @@ export default function AdminRegister() {
       </div>
       {!range && <p className="admin-feedback admin-feedback-error" role="alert">Revisa las fechas: el inicio debe ser anterior o igual al final.</p>}
       <div className="admin-register-summary">
-        <article><span>Ventas confirmadas</span><strong>{money(summary.sales)}</strong></article>
-        <article><span>Coste de lo vendido (FIFO)</span><strong>{money(summary.costOfSales)}</strong></article>
+        <article><span>Ventas registradas</span><strong>{money(summary.sales)}</strong></article>
+        <article><span>Coste de lo vendido</span><strong>{money(summary.costOfSales)}</strong></article>
         <article><span>Ganancia bruta</span><strong>{money(summary.sales - summary.costOfSales)}</strong></article>
-        <article><span>Compras recibidas</span><strong>{money(summary.purchases)}</strong></article>
+        <article><span>Coste de lotes recibidos</span><strong>{money(summary.purchases)}</strong></article>
       </div>
-      <p className="admin-footnote">El informe suma las ventas confirmadas y las entradas de mercancía del periodo. La ganancia bruta es ventas menos coste FIFO de lo vendido; no equivale al flujo neto de caja ni descuenta gastos operativos.</p>
+      <p className="admin-footnote">Las compras se muestran por lote con su coste total, aunque dentro del inventario se detallen todas las prendas. La ganancia bruta es ventas menos el coste de las unidades vendidas (FIFO); no es lo mismo que el dinero en caja y no descuenta gastos operativos. No se crean ventas al preparar WhatsApp: registra aquí la venta real desde Registro de movimientos.</p>
     </section>
     <section className="admin-section">
-      <div className="admin-section-heading"><div><p className="admin-kicker">ORDEN CRONOLÓGICO</p><h2>Movimientos del periodo</h2></div><span className="admin-status">{movements.length} registros</span></div>
-      {loading ? <p className="admin-empty">Cargando movimientos…</p> : movements.length === 0 ? <p className="admin-empty">No hay movimientos en este periodo. Las entradas se registran al recibir mercancía y las ventas cuando se confirman.</p> : (
+      <div className="admin-section-heading"><div><p className="admin-kicker">OPERACIONES AGRUPADAS</p><h2>Compras y ventas</h2></div><span className="admin-status">{entries.filter(e => e.status === 'confirmed').length} registros confirmados</span></div>
+      {loading ? <p className="admin-empty">Cargando operaciones…</p> : entries.length === 0 ? <p className="admin-empty">No hay operaciones en este periodo. Registra manualmente una compra de lote o una venta confirmada.</p> : (
         <div className="admin-record-list">
-          {movements.map(movement => <article className="admin-record" key={movement.id}>
-            <div className="admin-record-head">
-              <div><h3>{movement.product_name}</h3><p>{dateLabel(movement.created_at)} · {movementLabel[movement.movement_type]}</p></div>
-              <span className={'admin-status ' + (movement.action === 'entrada' ? 'admin-status-published' : 'admin-status-archived')}>{movement.action === 'entrada' ? '+' : '−'}{movement.quantity} ud.</span>
-            </div>
-            <div className="admin-record-metrics">
-              <span>Variante <strong>{[movement.size, movement.color].filter(Boolean).join(' · ') || 'Sin talla/color'}</strong></span>
-              <span>SKU <strong>{movement.sku}</strong></span>
-              <span>{movement.movement_type === 'sale' ? 'Precio de venta' : 'Coste unitario'} <strong>{money(Number(movement.unit_price_usd ?? 0))}</strong></span>
-              <span>{movement.movement_type === 'sale' ? 'Venta total' : 'Valor de entrada'} <strong>{money(Number(movement.total_usd ?? 0))}</strong></span>
-            </div>
-            {movement.note && <p className="admin-footnote">{movement.note}</p>}
-          </article>)}
+          {entries.map(entry => {
+            const isPurchase = entry.entry_type === 'purchase'
+            const isSale = entry.entry_type === 'sale'
+            const total = isPurchase ? Number(entry.purchase_total_usd ?? 0) : isSale ? Number(entry.sales_total_usd ?? 0) : 0
+            const cost = isSale ? Number(entry.cost_of_sales_usd ?? 0) : 0
+            return <article className="admin-record" key={entry.id}>
+              <div className="admin-record-head">
+                <div><h3>{entryLabel[entry.entry_type] ?? entry.entry_type}</h3><p>{dateLabel(entry.created_at)}{entry.reference ? ' · ' + entry.reference : ''}</p></div>
+                <span className={'admin-status ' + (entry.status === 'confirmed' ? 'admin-status-published' : 'admin-status-archived')}>{entry.status === 'confirmed' ? 'Confirmado' : entry.status === 'cancelled' ? 'Anulado' : 'Borrador'}</span>
+              </div>
+              <div className="admin-record-metrics">
+                <span>Unidades <strong>{entry.unit_count}</strong></span>
+                {isPurchase && <span>Coste total del lote <strong>{money(total)}</strong></span>}
+                {isSale && <><span>Venta total <strong>{money(total)}</strong></span><span>Coste de lo vendido <strong>{money(cost)}</strong></span><span>Ganancia bruta <strong>{money(total - cost)}</strong></span></>}
+              </div>
+              {entry.notes && <p className="admin-footnote">{entry.notes}</p>}
+            </article>
+          })}
         </div>
       )}
     </section>
