@@ -253,7 +253,7 @@ function App() {
         </section>
 
         <section className="collection-section section-wrap" id="coleccion">
-          <div className="section-heading"><div><p className="eyebrow">{categoryLanding ? 'COLECCIÓN POR CATEGORÍA' : 'SELECCIÓN LIBRE'}</p><h2>{categoryLanding ? <>{categoryLanding} <em>para ti.</em></> : <>Nuestros <em>productos.</em></>}</h2></div><p className="section-intro">{categoryLanding ? `Descubre nuestra selección de ${categoryLanding.toLocaleLowerCase('es')} en LIBRE femme. Moda femenina en Cuba, elegida para expresar tu estilo a tu manera.` : 'Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.'}</p></div>
+          <div className="section-heading"><div><p className="eyebrow">{categoryLanding ? 'COLECCIÓN POR CATEGORÍA' : 'SELECCIÓN LIBRE'}</p><h2>{categoryLanding ? <>{categoryLanding} <em>para ti.</em></> : <>Nuestros productos.</>}</h2></div><p className="section-intro">{categoryLanding ? `Descubre nuestra selección de ${categoryLanding.toLocaleLowerCase('es')} en LIBRE femme. Moda femenina en Cuba, elegida para expresar tu estilo a tu manera.` : 'Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.'}</p></div>
           <div className="collection-toolbar">
             <label className="product-search"><span className="sr-only">Buscar prendas</span><span className="search-icon" aria-hidden="true">⌕</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar una prenda…" /></label>
             <div className="category-filters" role="group" aria-label="Filtrar por categoría">
@@ -285,7 +285,7 @@ function App() {
                 {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
                   {gallery.map((image, imageIndex) => <button key={image.url} type="button" className={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex ? 'active' : ''} aria-label={`Ver fotografía ${imageIndex + 1}`} aria-pressed={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex} onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: imageIndex }))}><img src={image.url} alt="" loading="lazy" /></button>)}
                 </div> })()}
-                <div className="product-info"><div><h3>{product.name}</h3><p className="product-description-preview">{product.description}</p><button className="product-read-more" type="button" onClick={() => setSelectedProduct(product)}>Ver detalles</button></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
+                <div className="product-info"><div><h3>{product.name}</h3><p className="product-description-preview">{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
                   {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} style={(variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')]) ? { backgroundColor: variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] } : undefined} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
@@ -311,17 +311,46 @@ function App() {
 
 
 
-      {selectedProduct && <div className="product-modal-backdrop" role="presentation" onClick={() => setSelectedProduct(null)}>
-        <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={(event) => event.stopPropagation()}>
-          <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
-          <div className="product-modal-image">{selectedProduct.images[0] ? <img src={selectedProduct.images[0].url} alt={selectedProduct.images[0].alt} /> : <div className="garment-shape"><span /></div>}</div>
-          <div className="product-modal-info"><p className="eyebrow">{selectedProduct.category}</p><h2>{selectedProduct.name}</h2><p className="product-modal-description">{selectedProduct.description}</p>
-            <strong className="product-modal-price">{formatPrice((selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).sale_price)}</strong>
-            {[...new Set(selectedProduct.variants.map(item => item.size).filter(Boolean))].length > 0 && <div className="product-modal-options"><span className="option-label">TALLA</span><div>{[...new Set(selectedProduct.variants.map(item => item.size).filter(Boolean))].map(size => { const current=selectedProduct.variants.find(item => item.id===selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]; const option=selectedProduct.variants.find(item => item.size===size && (!current.color || item.color===current.color)) ?? selectedProduct.variants.find(item => item.size===size); return <button key={size} type="button" className={current.id===option?.id?'selected':''} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{size}</button> })}</div></div>}{[...new Set(selectedProduct.variants.map(item => item.color).filter(Boolean))].length > 0 && <div className="product-modal-options"><span className="option-label">COLOR</span><div>{[...new Set(selectedProduct.variants.map(item => item.color).filter(Boolean))].map(color => { const current=selectedProduct.variants.find(item => item.id===selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]; const option=selectedProduct.variants.find(item => item.color===color && (!current.size || item.size===current.size)) ?? selectedProduct.variants.find(item => item.color===color); return <button key={color} type="button" className={current.id===option?.id?'selected':''} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{color}</button> })}</div></div>}<p className="variant-stock-note">{(selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).stock_quantity > 0 ? "Disponible" : "Agotado por el momento"}</p>
-            <button className="product-modal-add" type="button" disabled={!(selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).is_available} onClick={() => addToCart(selectedProduct)}>Añadir a la bolsa ↗</button>
-          </div>
-        </section>
-      </div>}
+      {selectedProduct && (() => {
+        const activeVariant = selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]
+        const activeHex = activeVariant.color_hex?.trim().toLowerCase() || null
+        const colorGallery = activeHex ? selectedProduct.images.filter(image => image.color_hex?.trim().toLowerCase() === activeHex) : []
+        const generalGallery = selectedProduct.images.filter(image => image.color_hex === null)
+        const gallery = colorGallery.length ? colorGallery : (generalGallery.length ? generalGallery : selectedProduct.images)
+        const imageIndex = (selectedProductImages[selectedProduct.id] ?? 0) % Math.max(gallery.length, 1)
+        const currentImage = gallery[imageIndex]
+        const sizes = [...new Set(selectedProduct.variants.map(item => item.size).filter(Boolean))]
+        const colors = [...new Set(selectedProduct.variants.map(item => item.color).filter(Boolean))]
+        return <div className="product-modal-backdrop" role="presentation" onClick={() => setSelectedProduct(null)}>
+          <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={event => event.stopPropagation()}>
+            <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
+            <div className="product-modal-image">
+              {currentImage ? <img src={currentImage.url} alt={currentImage.alt} /> : <div className="garment-shape"><span /></div>}
+              {gallery.length > 1 && <div className="product-modal-gallery">
+                <button type="button" aria-label="Foto anterior" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex-1+gallery.length)%gallery.length}))}>‹</button>
+                <span>{imageIndex+1} / {gallery.length}</span>
+                <button type="button" aria-label="Foto siguiente" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex+1)%gallery.length}))}>›</button>
+              </div>}
+            </div>
+            <div className="product-modal-info">
+              <p className="eyebrow">{selectedProduct.category}</p>
+              <h2>{selectedProduct.name}</h2>
+              <p className="product-modal-description">{selectedProduct.description}</p>
+              <strong className="product-modal-price">{formatPrice(activeVariant.sale_price)}</strong>
+              {sizes.length > 0 && <div className="product-modal-options"><span className="option-label">TALLA</span><div>{sizes.map(size => {
+                const option = selectedProduct.variants.find(item => item.size === size && (!activeVariant.color || item.color === activeVariant.color)) ?? selectedProduct.variants.find(item => item.size === size)
+                return <button key={size} type="button" className={activeVariant.id === option?.id ? 'selected' : ''} aria-pressed={activeVariant.id === option?.id} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{size}</button>
+              })}</div></div>}
+              {colors.length > 0 && <div className="product-modal-options"><span className="option-label">COLOR</span><div>{colors.map(color => {
+                const option = selectedProduct.variants.find(item => item.color === color && (!activeVariant.size || item.size === activeVariant.size)) ?? selectedProduct.variants.find(item => item.color === color)
+                return <button key={color} type="button" className={activeVariant.id === option?.id ? 'selected' : ''} aria-pressed={activeVariant.id === option?.id} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{color}</button>
+              })}</div></div>}
+              <p className="variant-stock-note">{activeVariant.stock_quantity > 0 ? `Disponible · ${activeVariant.stock_quantity}` : 'Agotado por el momento'}</p>
+              <button className="product-modal-add" type="button" disabled={!activeVariant.is_available} onClick={() => addToCart(selectedProduct)}>{activeVariant.is_available ? 'Añadir a la bolsa ↗' : 'Agotado'}</button>
+            </div>
+          </section>
+        </div>
+      })()}
       {cartOpen && <div className="drawer-backdrop" role="presentation" onClick={() => setCartOpen(false)}><aside className="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" onClick={(event) => event.stopPropagation()}>
         <div className="drawer-heading"><div><p className="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Tu bolsa <span>({cartCount})</span></h2></div><button className="close-drawer" type="button" onClick={() => setCartOpen(false)} aria-label="Cerrar bolsa">×</button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><span>✳</span><h3>Tu bolsa está esperando.</h3><p>Explora la colección y añade las piezas que más conecten contigo.</p><button className="button button-dark" type="button" onClick={() => { setCartOpen(false); document.getElementById('coleccion')?.scrollIntoView({ behavior: 'smooth' }) }}>Ver colección</button></div> : <>
