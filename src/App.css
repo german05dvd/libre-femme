@@ -1435,7 +1435,7 @@ html { scroll-padding-top: 24px; }
 .product-art { min-height:0; aspect-ratio:.82; cursor:pointer; }
 .product-art:focus-visible { outline:2px solid var(--clay); outline-offset:3px; }
 .product-info > div { min-width:0; flex:1; }
-.product-info p.product-description-preview { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; margin:0; line-height:1.55; }
+.product-info p.product-description-preview { display:block; overflow:visible; margin:0; line-height:1.55; }
 .product-read-more { margin-top:5px; padding:0; border:0; background:none; color:var(--clay); font-size:10px; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
 .product-modal-backdrop { position:fixed; z-index:40; inset:0; display:grid; place-items:center; padding:22px; background:rgba(25,18,14,.72); backdrop-filter:blur(5px); animation:fade-in .2s ease; }
 .product-modal { position:relative; display:grid; grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr); width:min(100%,1000px); max-height:88svh; overflow:auto; background:#fffdf9; box-shadow:0 24px 90px rgba(0,0,0,.28); animation:rise-in .25s ease both; }
