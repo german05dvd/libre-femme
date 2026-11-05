@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap');
 
 :root {
   --chocolate: #39281f;
@@ -8,8 +8,8 @@
   --clay: #a87862;
   --muted: #82756a;
   --line: #e7ded4;
-  --sans: 'DM Sans', 'Helvetica Neue', sans-serif;
-  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Manrope', 'Helvetica Neue', sans-serif;
+  --serif: 'DM Serif Display', Georgia, serif;
   font-family: var(--sans);
   color: var(--chocolate);
   background: var(--ivory);
