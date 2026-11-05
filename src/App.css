@@ -1466,3 +1466,10 @@ html { scroll-padding-top: 24px; }
  .product-modal-description { margin-bottom:14px; font-size:12px; line-height:1.65; }
 }
 @media(prefers-reduced-motion:reduce) { .hero-section.hero-editorial .hero-copy h1::after { animation:none; } }
+
+.product-modal-options { width:100%; margin-top:16px; }
+.product-modal-options > div { display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
+.product-modal-options button { min-width:36px; padding:8px 11px; border:1px solid var(--line); background:transparent; color:var(--chocolate); font-size:11px; cursor:pointer; }
+.product-modal-options button.selected { border-color:var(--chocolate); background:var(--chocolate); color:white; }
+.product-modal-gallery { position:absolute; right:16px; bottom:16px; display:flex; align-items:center; gap:14px; padding:8px 10px; background:rgba(255,253,249,.94); font-size:11px; }
+.product-modal-gallery button { border:0; background:none; font-size:20px; cursor:pointer; }
