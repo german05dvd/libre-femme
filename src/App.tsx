@@ -57,7 +57,7 @@ function App() {
   const [selectedProductImages, setSelectedProductImages] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
-  const [sloganText, setSloganText] = useState('Viste como te sientes.')
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -148,31 +148,6 @@ function App() {
     const timeout = window.setTimeout(() => setCartNotice(''), 2400)
     return () => window.clearTimeout(timeout)
   }, [cartNotice])
-
-  useEffect(() => {
-    const slogans = ['Tu estilo, sin pedir permiso.', 'Piezas que hablan de ti.', 'Libertad para ser tú.', 'Lo que llevas, lo eliges tú.', 'Cada día, a tu manera.']
-    let index = 0
-    let phase: 'hold' | 'erase' | 'type' = 'hold'
-    let position = slogans[0].length
-    let pauseTicks = 0
-    const timer = window.setInterval(() => {
-      if (phase === 'hold') {
-        pauseTicks += 1
-        if (pauseTicks >= 22) { phase = 'erase'; pauseTicks = 0 }
-        return
-      }
-      if (phase === 'erase') {
-        position -= 1
-        setSloganText(slogans[index].slice(0, position))
-        if (position <= 0) { index = (index + 1) % slogans.length; phase = 'type'; position = 0 }
-        return
-      }
-      position += 1
-      setSloganText(slogans[index].slice(0, position))
-      if (position >= slogans[index].length) { phase = 'hold'; pauseTicks = 0 }
-    }, 90)
-    return () => window.clearInterval(timer)
-  }, [])
 
   const availableCategories = useMemo(() => [...categories, ...new Set(products.map((product) => product.category).filter(Boolean))], [products])
   const categoryLanding = categoryPath ? products.find((product) => slugifyCategory(product.category) === categoryPath)?.category ?? null : null
@@ -265,7 +240,7 @@ function App() {
         <section className="hero-section hero-editorial" id="inicio">
           <div className="hero-copy">
             <p className="eyebrow"><span className="eyebrow-line" /> LIBRE FEMME · VESTIR CON LIBERTAD</p>
-            <h1 aria-label={sloganText}>{sloganText}<span className="type-caret" aria-hidden="true" /></h1>
+            <h1 className="hero-headline">Viste a tu manera.<span className="hero-headline-accent"> Sin límites.</span></h1>
             <p className="hero-description">Prendas que hablan de ti. Texturas, formas y detalles elegidos para acompañarte a tu manera.</p>
             <a className="hero-discover" href="#coleccion">EXPLORAR PRENDAS <span aria-hidden="true">↗</span></a>
             <div className="hero-edition"><span>01 — 26</span><span>UNA EXPRESIÓN PROPIA</span></div>
@@ -279,7 +254,6 @@ function App() {
 
         <section className="collection-section section-wrap" id="coleccion">
           <div className="section-heading"><div><p className="eyebrow">{categoryLanding ? 'COLECCIÓN POR CATEGORÍA' : 'SELECCIÓN LIBRE'}</p><h2>{categoryLanding ? <>{categoryLanding} <em>para ti.</em></> : <>Nuestros <em>productos.</em></>}</h2></div><p className="section-intro">{categoryLanding ? `Descubre nuestra selección de ${categoryLanding.toLocaleLowerCase('es')} en LIBRE femme. Moda femenina en Cuba, elegida para expresar tu estilo a tu manera.` : 'Prendas versátiles, detalles cuidados y espacio para que tu personalidad sea la protagonista.'}</p></div>
-          <nav className="category-filters category-seo-links" aria-label="Explorar categorías">{availableCategories.filter((category) => category !== 'Todo').map((category) => <a key={category} href={`/categoria/${slugifyCategory(category)}/`} className={categoryLanding === category ? 'filter-chip active' : 'filter-chip'} aria-current={categoryLanding === category ? 'page' : undefined}>{category}</a>)}</nav>
           <div className="collection-toolbar">
             <label className="product-search"><span className="sr-only">Buscar prendas</span><span className="search-icon" aria-hidden="true">⌕</span><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar una prenda…" /></label>
             <div className="category-filters" role="group" aria-label="Filtrar por categoría">
@@ -296,7 +270,7 @@ function App() {
               const sizes = [...new Set(product.variants.map((variant) => variant.size).filter((size): size is string => Boolean(size)))]
               const visualColor = (selectedVariant.color ?? fallbackColors[index % fallbackColors.length]).toLowerCase().replace(/[^a-z]/g, '')
               return <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
-                <div className={`product-art product-art-${visualColor}`}>
+                <div className={`product-art product-art-${visualColor}`} role="button" tabIndex={0} aria-label={`Ver detalles de ${product.name}`} onClick={() => setSelectedProduct(product)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedProduct(product) } }}>
                   <span className="product-number">{String(index + 1).padStart(2, '0')}</span>
                   {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 0 ? <>
                     <img className="catalog-product-image" src={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].url} alt={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].alt} loading="lazy" />
@@ -311,7 +285,7 @@ function App() {
                 {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
                   {gallery.map((image, imageIndex) => <button key={image.url} type="button" className={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex ? 'active' : ''} aria-label={`Ver fotografía ${imageIndex + 1}`} aria-pressed={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex} onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: imageIndex }))}><img src={image.url} alt="" loading="lazy" /></button>)}
                 </div> })()}
-                <div className="product-info"><div><h3>{product.name}</h3><p>{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
+                <div className="product-info"><div><h3>{product.name}</h3><p className="product-description-preview">{product.description}</p><button className="product-read-more" type="button" onClick={() => setSelectedProduct(product)}>Ver detalles</button></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
                   {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} style={(variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')]) ? { backgroundColor: variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] } : undefined} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
@@ -336,6 +310,18 @@ function App() {
       </main>
 
 
+
+      {selectedProduct && <div className="product-modal-backdrop" role="presentation" onClick={() => setSelectedProduct(null)}>
+        <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={(event) => event.stopPropagation()}>
+          <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
+          <div className="product-modal-image">{selectedProduct.images[0] ? <img src={selectedProduct.images[0].url} alt={selectedProduct.images[0].alt} /> : <div className="garment-shape"><span /></div>}</div>
+          <div className="product-modal-info"><p className="eyebrow">{selectedProduct.category}</p><h2>{selectedProduct.name}</h2><p className="product-modal-description">{selectedProduct.description}</p>
+            <strong className="product-modal-price">{formatPrice((selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).sale_price)}</strong>
+            <p className="variant-stock-note">{(selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).stock_quantity > 0 ? "Disponible" : "Agotado por el momento"}</p>
+            <button className="product-modal-add" type="button" disabled={!(selectedProduct.variants.find(item => item.id === selectedVariants[selectedProduct.id]) ?? selectedProduct.variants[0]).is_available} onClick={() => addToCart(selectedProduct)}>Añadir a la bolsa ↗</button>
+          </div>
+        </section>
+      </div>}
       {cartOpen && <div className="drawer-backdrop" role="presentation" onClick={() => setCartOpen(false)}><aside className="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" onClick={(event) => event.stopPropagation()}>
         <div className="drawer-heading"><div><p className="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Tu bolsa <span>({cartCount})</span></h2></div><button className="close-drawer" type="button" onClick={() => setCartOpen(false)} aria-label="Cerrar bolsa">×</button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><span>✳</span><h3>Tu bolsa está esperando.</h3><p>Explora la colección y añade las piezas que más conecten contigo.</p><button className="button button-dark" type="button" onClick={() => { setCartOpen(false); document.getElementById('coleccion')?.scrollIntoView({ behavior: 'smooth' }) }}>Ver colección</button></div> : <>
