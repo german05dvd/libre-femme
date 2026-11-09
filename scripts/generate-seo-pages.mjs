@@ -177,7 +177,10 @@ async function main() {
       '<header><p>LIBRE FEMME · MODA FEMENINA EN CUBA</p><h1>' + escapeHtml(category.name) + ' para mujer</h1>' +
       '<p>Descubre nuestra selección de ' + escapeHtml(category.name.toLocaleLowerCase('es')) + ' en LIBRE femme. Piezas elegidas para expresar tu estilo a tu manera.</p>' +
       '<p><a href="/">Explorar toda la colección</a></p></header><section aria-label="Productos de ' + escapeHtml(category.name) + '">' +
-      '<h2>La selección LIBRE</h2>' + (productMarkup || '<p>Estamos preparando nuevas piezas para esta categoría.</p>') + '</section></main>'
+      '<h2>La selección LIBRE</h2>' + (productMarkup || '<p>Estamos preparando nuevas piezas para esta categoría.</p>') + '</section>' +
+      '<section aria-label="Preguntas frecuentes sobre ' + escapeHtml(category.name) + '"><h2>Preguntas frecuentes</h2>' +
+      '<h3>¿Cómo consulto la disponibilidad?</h3><p>Añade la pieza a tu bolsa y envía tu selección por WhatsApp. Confirmamos contigo la disponibilidad y los detalles de entrega antes de cerrar el pedido.</p>' +
+      '<h3>¿Puedo elegir talla o color?</h3><p>Cuando una prenda tiene variantes publicadas, puedes seleccionar las opciones disponibles en su ficha. Los detalles se confirman por WhatsApp.</p></section></main>'
     const html = injectPage(baseHtml, title, description, canonical, structuredData, fallback, category.products[0]?.images[0]?.url)
     const outputPath = join(process.cwd(), 'dist', 'categoria', slug, 'index.html')
     await mkdir(dirname(outputPath), { recursive: true })
