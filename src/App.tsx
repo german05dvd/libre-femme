@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import seoContent from '../content/seo-pages.json'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
@@ -87,6 +87,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const galleryTouchStart = useRef<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -181,6 +182,24 @@ function App() {
     const timeout = window.setTimeout(() => setCartNotice(''), 2400)
     return () => window.clearTimeout(timeout)
   }, [cartNotice])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const timer = window.setInterval(() => {
+      setSelectedProductImages((current) => {
+        const next = { ...current }
+        products.forEach((product) => {
+          const variant = product.variants.find((item) => item.id === selectedVariants[product.id]) ?? product.variants[0]
+          const activeHex = variant?.color_hex?.trim().toLowerCase() || null
+          const colorImages = activeHex ? product.images.filter((image) => image.color_hex?.trim().toLowerCase() === activeHex) : []
+          const gallery = colorImages.length ? colorImages : product.images.filter((image) => image.color_hex === null)
+          if (gallery.length > 1) next[product.id] = ((current[product.id] ?? 0) + 1) % gallery.length
+        })
+        return next
+      })
+    }, 7000)
+    return () => window.clearInterval(timer)
+  }, [products, selectedVariants])
 
   const availableCategories = useMemo(() => [...categories, ...new Set(products.map((product) => product.category).filter(Boolean))], [products])
   const categoryLanding = categoryPath ? products.find((product) => slugifyCategory(product.category) === categoryPath)?.category ?? null : null
@@ -401,15 +420,7 @@ function App() {
           <a className="seo-how-to-buy" href="/guia/como-comprar-en-libre-femme/">Cómo comprar en LIBRE femme ↗</a>
         </section>
 
-        <section className="details-editorial" id="detalles">
-          <div className="details-heading"><p className="eyebrow">ANTES DE ELEGIR</p><h2>Los detalles<br /><em>también visten.</em></h2></div>
-          <div className="details-content">
-            <article className="detail-note"><span className="detail-index">01 / TALLAS</span><h3>Elige cómo quieres sentirte.</h3><p>Selecciona una de las tallas publicadas en cada pieza. Si dudas entre dos, escríbenos antes de confirmar y te ayudaremos a elegir el ajuste que buscas.</p></article>
-            <article className="detail-note"><span className="detail-index">02 / COLOR</span><h3>Un mismo diseño, otra intención.</h3><p>Las opciones que aparecen en cada tarjeta proceden de las variantes registradas para ese producto.</p></article>
-            <article className="detail-note detail-note-dark"><span className="detail-index">03 / TU PEDIDO</span><h3>Primero lo confirmamos contigo.</h3><p>Tu bolsa reúne las piezas elegidas y abre una consulta por WhatsApp. Confirmamos disponibilidad y entrega antes de cerrar el pedido; añadir algo no reserva existencias.</p><a className="details-link" href="https://wa.me/5358352149?text=Hola%2C%20LIBRE%20femme.%20Quisiera%20consultar%20sobre%20las%20tallas%2C%20colores%20y%20disponibilidad%20de%20la%20colecci%C3%B3n." target="_blank" rel="noreferrer">Consultar por WhatsApp <span aria-hidden="true">↗</span></a></article>
-          </div>
-          <div className="details-signature"><span>LIBRE femme</span><span>Elegido por ti. A tu manera.</span><span>LA HABANA · CUBA</span></div>
-        </section>
+
       </main>
 
 
@@ -427,13 +438,22 @@ function App() {
         return <div className="product-modal-backdrop" role="presentation" onClick={closeProduct}>
           <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={event => event.stopPropagation()}>
             <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
-            <div className="product-modal-image">
+            <div className="product-modal-image"
+              onTouchStart={(event) => { galleryTouchStart.current = event.touches[0]?.clientX ?? null }}
+              onTouchEnd={(event) => {
+                const start = galleryTouchStart.current
+                const end = event.changedTouches[0]?.clientX
+                galleryTouchStart.current = null
+                if (start === null || end === undefined || Math.abs(end - start) < 40 || gallery.length < 2) return
+                const direction = end < start ? 1 : -1
+                setSelectedProductImages(state => ({ ...state, [selectedProduct.id]: (imageIndex + direction + gallery.length) % gallery.length }))
+              }}>
               {currentImage ? <img src={currentImage.url} alt={currentImage.alt} /> : <div className="garment-shape"><span /></div>}
-              {gallery.length > 1 && <div className="product-modal-gallery">
-                <button type="button" aria-label="Foto anterior" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex-1+gallery.length)%gallery.length}))}>‹</button>
-                <span>{imageIndex+1} / {gallery.length}</span>
-                <button type="button" aria-label="Foto siguiente" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex+1)%gallery.length}))}>›</button>
-              </div>}
+              {gallery.length > 1 && <>
+                <button className="gallery-arrow gallery-arrow-prev" type="button" aria-label="Foto anterior" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex-1+gallery.length)%gallery.length}))}>‹</button>
+                <button className="gallery-arrow gallery-arrow-next" type="button" aria-label="Foto siguiente" onClick={() => setSelectedProductImages(state => ({...state,[selectedProduct.id]:(imageIndex+1)%gallery.length}))}>›</button>
+                <span className="gallery-position" aria-live="polite">{imageIndex+1} / {gallery.length}</span>
+              </>}
             </div>
             <div className="product-modal-info">
               <p className="eyebrow">{selectedProduct.category}</p>
@@ -444,9 +464,10 @@ function App() {
                 const option = selectedProduct.variants.find(item => item.size === size && (!activeVariant.color || item.color === activeVariant.color)) ?? selectedProduct.variants.find(item => item.size === size)
                 return <button key={size} type="button" className={activeVariant.id === option?.id ? 'selected' : ''} aria-pressed={activeVariant.id === option?.id} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{size}</button>
               })}</div></div>}
-              {colors.length > 0 && <div className="product-modal-options"><span className="option-label">COLOR</span><div>{colors.map(color => {
+              {colors.length > 0 && <div className="product-modal-options product-modal-color-options"><span className="option-label">COLOR</span><div>{colors.map(color => {
                 const option = selectedProduct.variants.find(item => item.color === color && (!activeVariant.size || item.size === activeVariant.size)) ?? selectedProduct.variants.find(item => item.color === color)
-                return <button key={color} type="button" className={activeVariant.id === option?.id ? 'selected' : ''} aria-pressed={activeVariant.id === option?.id} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{color}</button>
+                const hex = option?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] || '#d8c5a9'
+                return <button key={color} type="button" className={activeVariant.color === color ? 'selected' : ''} aria-label={'Color ' + color} title={color} aria-pressed={activeVariant.color === color} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}><span className="modal-color-swatch" style={{ backgroundColor: hex }} /></button>
               })}</div></div>}
               <p className="variant-stock-note">{activeVariant.stock_quantity > 0 ? `Disponible · ${activeVariant.stock_quantity}` : 'Agotado por el momento'}</p>
               <button className="product-modal-add" type="button" disabled={!activeVariant.is_available} onClick={() => addToCart(selectedProduct)}>{activeVariant.is_available ? 'Añadir a la bolsa ↗' : 'Agotado'}</button>
