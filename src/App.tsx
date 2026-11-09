@@ -181,7 +181,7 @@ function App() {
 
   useEffect(() => {
     const syncProductRoute = () => {
-      const slug = window.location.pathname.match(/^\\/producto\\/([^/]+)\\/?$/)?.[1] ?? null
+      const slug = window.location.pathname.match(/^\/producto\/([^/]+)\/?$/)?.[1] ?? null
       setSelectedProduct(slug ? products.find((product) => slugifyCategory(product.slug) === slug) ?? null : null)
     }
     window.addEventListener('popstate', syncProductRoute)
