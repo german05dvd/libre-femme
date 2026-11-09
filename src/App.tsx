@@ -247,7 +247,7 @@ function App() {
 
   useEffect(() => {
     if (!selectedProduct) return
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeProduct() }
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') { setSelectedProduct(null); if (window.location.pathname.startsWith('/producto/')) window.history.pushState({}, '', '/') } }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedProduct])
