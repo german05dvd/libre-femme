@@ -71,7 +71,7 @@ async function main() {
   const sitemapUrls = [siteUrl + '/']
 
   for (const page of editorialContent.pages) {
-    const canonical = siteUrl + '/' + page.path.replace(/^\/+|\/+$/g, '')) + '/'
+    const canonical = siteUrl + '/' + page.path.replace(/^\/+|\/+$/g, '') + '/'
     const structuredData = {
       '@context': 'https://schema.org',
       '@type': page.kind === 'article' ? 'Article' : 'WebPage',
