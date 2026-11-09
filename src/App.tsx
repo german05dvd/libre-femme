@@ -47,6 +47,7 @@ function formatPrice(price: number) {
 function App() {
   const [products, setProducts] = useState<Product[]>([])
   const categoryPath = window.location.pathname.match(/^\/categoria\/([^/]+)\/?$/)?.[1] ?? null
+  const productPath = window.location.pathname.match(/^\/producto\/([^/]+)\/?$/)?.[1] ?? null
   const [activeCategory, setActiveCategory] = useState('Todo')
   const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
@@ -124,6 +125,10 @@ function App() {
         }
       }).filter((product) => product.variants.length > 0)
       setProducts(nextProducts)
+      if (productPath) {
+        const routeProduct = nextProducts.find((product) => slugifyCategory(product.slug) === productPath)
+        if (routeProduct) setSelectedProduct(routeProduct)
+      }
       if (categoryPath) {
         const requestedCategory = nextProducts.find((product) => slugifyCategory(product.category) === categoryPath)?.category
         if (requestedCategory) setActiveCategory(requestedCategory)
@@ -132,7 +137,7 @@ function App() {
     }
     void loadCatalog()
     return () => { cancelled = true }
-  }, [categoryPath])
+  }, [categoryPath, productPath])
 
   useEffect(() => {
     if (!cartOpen) return
@@ -163,6 +168,32 @@ function App() {
   })
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const cartTotal = cartItems.reduce((sum, item) => sum + item.variant.sale_price * item.quantity, 0)
+
+  const openProduct = (product: Product) => {
+    window.history.pushState({}, '', '/producto/' + slugifyCategory(product.slug) + '/')
+    setSelectedProduct(product)
+  }
+
+  const closeProduct = () => {
+    setSelectedProduct(null)
+    if (window.location.pathname.startsWith('/producto/')) window.history.pushState({}, '', '/')
+  }
+
+  useEffect(() => {
+    const syncProductRoute = () => {
+      const slug = window.location.pathname.match(/^\\/producto\\/([^/]+)\\/?$/)?.[1] ?? null
+      setSelectedProduct(slug ? products.find((product) => slugifyCategory(product.slug) === slug) ?? null : null)
+    }
+    window.addEventListener('popstate', syncProductRoute)
+    return () => window.removeEventListener('popstate', syncProductRoute)
+  }, [products])
+
+  useEffect(() => {
+    if (!selectedProduct) return
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeProduct() }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedProduct])
 
   const addToCart = (product: Product) => {
     const variantId = selectedVariants[product.id] ?? product.variants[0]?.id
@@ -270,7 +301,7 @@ function App() {
               const sizes = [...new Set(product.variants.map((variant) => variant.size).filter((size): size is string => Boolean(size)))]
               const visualColor = (selectedVariant.color ?? fallbackColors[index % fallbackColors.length]).toLowerCase().replace(/[^a-z]/g, '')
               return <article className="product-card" key={product.id} style={{ animationDelay: `${index * 65}ms` }}>
-                <div className={`product-art product-art-${visualColor}`} role="button" tabIndex={0} aria-label={`Ver detalles de ${product.name}`} onClick={() => setSelectedProduct(product)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedProduct(product) } }}>
+                <div className={`product-art product-art-${visualColor}`} role="button" tabIndex={0} aria-label={`Ver detalles de ${product.name}`} onClick={() => openProduct(product)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openProduct(product) } }}>
                   <span className="product-number">{String(index + 1).padStart(2, '0')}</span>
                   {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 0 ? <>
                     <img className="catalog-product-image" src={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].url} alt={gallery[(selectedProductImages[product.id] ?? 0) % gallery.length].alt} loading="lazy" />
@@ -285,7 +316,7 @@ function App() {
                 {(() => { const selectedHex = selectedVariant.color_hex?.trim().toLowerCase() || null; const colorImages = selectedHex ? product.images.filter(image => image.color_hex?.trim().toLowerCase() === selectedHex) : []; const gallery = colorImages.length > 0 ? colorImages : product.images.filter(image => image.color_hex === null); return gallery.length > 1 && <div className="product-gallery-thumbnails" aria-label={`Elegir fotografía de ${product.name}`}>
                   {gallery.map((image, imageIndex) => <button key={image.url} type="button" className={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex ? 'active' : ''} aria-label={`Ver fotografía ${imageIndex + 1}`} aria-pressed={((selectedProductImages[product.id] ?? 0) % gallery.length) === imageIndex} onClick={() => setSelectedProductImages(current => ({ ...current, [product.id]: imageIndex }))}><img src={image.url} alt="" loading="lazy" /></button>)}
                 </div> })()}
-                <div className="product-info"><div><h3>{product.name}</h3><p className="product-description-preview">{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
+                <div className="product-info"><div><h3><a className="product-title-link" href={'/producto/' + slugifyCategory(product.slug)} onClick={(event) => { event.preventDefault(); openProduct(product) }}>{product.name}</a></h3><p className="product-description-preview">{product.description}</p></div><span className="product-price">{formatPrice(selectedVariant.sale_price)}</span></div>
                 <div className="product-options">
                   {sizes.length > 0 && <div className="size-picker" role="group" aria-label={`Elegir talla para ${product.name}`}><span className="option-label">TALLA</span>{sizes.map((size) => { const variant = product.variants.find((item) => item.size === size && (!selectedVariant.color || item.color === selectedVariant.color)) ?? product.variants.find((item) => item.size === size); return <button key={size} type="button" className={selectedVariant.id === variant?.id ? 'size-option selected' : 'size-option'} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))}>{size}</button> })}</div>}
                   {colors.length > 0 && <div className="color-picker" role="group" aria-label={`Elegir color para ${product.name}`}><span className="option-label">COLORES</span><div className="swatches">{colors.map((color) => { const variant = product.variants.find((item) => item.color === color && (!selectedVariant.size || item.size === selectedVariant.size)) ?? product.variants.find((item) => item.color === color); const swatch = color.toLowerCase().replace(/[^a-z]/g, ''); return <button key={color} type="button" className={`color-swatch swatch-${swatch} ${selectedVariant.id === variant?.id ? 'selected' : ''}`} style={(variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')]) ? { backgroundColor: variant?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] } : undefined} aria-label={`Color ${color}`} aria-pressed={selectedVariant.id === variant?.id} onClick={() => variant && setSelectedVariants((current) => ({ ...current, [product.id]: variant.id }))} /> })}</div></div>}
@@ -321,7 +352,7 @@ function App() {
         const currentImage = gallery[imageIndex]
         const sizes = [...new Set(selectedProduct.variants.map(item => item.size).filter(Boolean))]
         const colors = [...new Set(selectedProduct.variants.map(item => item.color).filter(Boolean))]
-        return <div className="product-modal-backdrop" role="presentation" onClick={() => setSelectedProduct(null)}>
+        return <div className="product-modal-backdrop" role="presentation" onClick={closeProduct}>
           <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={event => event.stopPropagation()}>
             <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
             <div className="product-modal-image">
