@@ -456,6 +456,7 @@ function App() {
               <h2>{selectedProduct.name}</h2>
               <p className="product-modal-description">{selectedProduct.description}</p>
               <strong className="product-modal-price">{formatPrice(activeVariant.sale_price)}</strong>
+              <div className="product-modal-variant-grid">
               {sizes.length > 0 && <div className="product-modal-options"><span className="option-label">TALLA</span><div>{sizes.map(size => {
                 const option = selectedProduct.variants.find(item => item.size === size && (!activeVariant.color || item.color === activeVariant.color)) ?? selectedProduct.variants.find(item => item.size === size)
                 return <button key={size} type="button" className={activeVariant.id === option?.id ? 'selected' : ''} aria-pressed={activeVariant.id === option?.id} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}>{size}</button>
@@ -465,6 +466,7 @@ function App() {
                 const hex = option?.color_hex || publicColorHex[color.trim().toLocaleLowerCase('es')] || '#d8c5a9'
                 return <button key={color} type="button" className={activeVariant.color === color ? 'selected' : ''} aria-label={'Color ' + color} title={color} aria-pressed={activeVariant.color === color} onClick={() => option && setSelectedVariants(state => ({...state,[selectedProduct.id]:option.id}))}><span className="modal-color-swatch" style={{ backgroundColor: hex }} /></button>
               })}</div></div>}
+              </div>
               <p className="variant-stock-note">{activeVariant.stock_quantity > 0 ? `Disponible · ${activeVariant.stock_quantity}` : 'Agotado por el momento'}</p>
               <button className="product-modal-add" type="button" disabled={!activeVariant.is_available} onClick={() => addToCart(selectedProduct)}>{activeVariant.is_available ? 'Añadir a la bolsa ↗' : 'Agotado'}</button>
             </div>
