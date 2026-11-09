@@ -156,6 +156,29 @@ function App() {
 
   const availableCategories = useMemo(() => [...categories, ...new Set(products.map((product) => product.category).filter(Boolean))], [products])
   const categoryLanding = categoryPath ? products.find((product) => slugifyCategory(product.category) === categoryPath)?.category ?? null : null
+
+  useEffect(() => {
+    const title = selectedProduct
+      ? selectedProduct.name + ' | LIBRE femme · ' + selectedProduct.category + ' en Cuba'
+      : categoryLanding
+        ? categoryLanding + ' para mujer en Cuba | LIBRE femme'
+        : 'Tienda de ropa para mujer en Cuba | LIBRE femme'
+    const description = selectedProduct
+      ? (selectedProduct.description || selectedProduct.name) + ' Consulta tallas, colores y disponibilidad por WhatsApp.'
+      : categoryLanding
+        ? 'Descubre nuestra selección de ' + categoryLanding.toLocaleLowerCase('es') + ' para mujer en Cuba en LIBRE femme.'
+        : 'Tienda de moda femenina en Cuba. Descubre ropa para mujer, vestidos, tops, conjuntos, bolsos y accesorios en LIBRE femme.'
+    document.title = title
+    const descriptionTag = document.querySelector('meta[name="description"]')
+    if (descriptionTag) descriptionTag.setAttribute('content', description.slice(0, 155))
+    const canonical = selectedProduct
+      ? '/producto/' + slugifyCategory(selectedProduct.slug) + '/'
+      : categoryLanding && categoryPath
+        ? '/categoria/' + categoryPath + '/'
+        : '/'
+    const canonicalTag = document.querySelector('link[rel="canonical"]')
+    if (canonicalTag) canonicalTag.setAttribute('href', window.location.origin + canonical)
+  }, [selectedProduct, categoryLanding, categoryPath])
   const visibleProducts = useMemo(
     () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
     [products, activeCategory, searchTerm],
