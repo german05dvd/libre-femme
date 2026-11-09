@@ -1,0 +1,179 @@
+{
+  "pages": [
+    {
+      "slug": "como-combinar-bolsos",
+      "path": "guia/como-combinar-bolsos",
+      "kind": "article",
+      "title": "Cómo combinar bolsos con diferentes estilos | LIBRE femme",
+      "h1": "Cómo combinar bolsos con diferentes estilos",
+      "description": "Ideas sencillas para elegir y combinar bolsos con prendas, colores y estilos distintos. Inspírate con LIBRE femme.",
+      "intro": "Un bolso puede acompañar un conjunto o convertirse en el detalle que le da personalidad. Para elegirlo, piensa en el estilo que quieres expresar, en los colores que ya llevas y en el uso que tendrá durante el día.",
+      "sections": [
+        {
+          "heading": "Empieza por la intención del conjunto",
+          "paragraphs": [
+            "Para un look sencillo, un bolso con textura o un tono diferente puede aportar interés sin recargarlo. Si la ropa ya tiene estampados o muchos detalles, una forma más limpia ayuda a equilibrar el conjunto.",
+            "No hace falta que el bolso y los zapatos sean exactamente del mismo color. Puedes repetir un tono en un accesorio pequeño o elegir colores que se complementen."
+          ]
+        },
+        {
+          "heading": "Juega con proporciones y ocasiones",
+          "paragraphs": [
+            "Las formas pequeñas suelen funcionar bien cuando quieres un resultado ligero; los bolsos más amplios acompañan mejor los días en que necesitas llevar varias cosas. La comodidad también forma parte del estilo.",
+            "Piensa en el tamaño en relación con la silueta y con lo que necesitas llevar. El mejor bolso es el que encaja con tu día y con tu manera de vestir."
+          ]
+        },
+        {
+          "heading": "Construye combinaciones con piezas versátiles",
+          "paragraphs": [
+            "Un bolso neutro puede acompañar vestidos, jeans y conjuntos sin competir con ellos. Si prefieres que el accesorio destaque, elige una pieza con color o textura y mantén el resto del conjunto más sencillo."
+          ]
+        }
+      ],
+      "links": [
+        {
+          "label": "Explorar bolsos",
+          "href": "/categoria/bolsos/"
+        },
+        {
+          "label": "Ver vestidos",
+          "href": "/categoria/vestidos/"
+        },
+        {
+          "label": "Descubrir conjuntos",
+          "href": "/categoria/conjuntos/"
+        }
+      ]
+    },
+    {
+      "slug": "ideas-para-combinar-tops-y-jeans",
+      "path": "guia/ideas-para-combinar-tops-y-jeans",
+      "kind": "article",
+      "title": "Ideas para combinar tops y jeans | LIBRE femme",
+      "h1": "Ideas para combinar tops y jeans",
+      "description": "Descubre formas de combinar tops y jeans con equilibrio, capas y accesorios para crear looks casuales a tu manera.",
+      "intro": "Tops y jeans forman una combinación versátil porque permiten cambiar el resultado con pequeños detalles. La clave está en jugar con las proporciones, el color y los accesorios sin perder comodidad.",
+      "sections": [
+        {
+          "heading": "Equilibra las proporciones",
+          "paragraphs": [
+            "Si eliges un top ajustado, puedes probar con unos jeans de corte más amplio; si el top tiene volumen, una parte inferior más sencilla puede equilibrar el conjunto. Son ideas para experimentar, no reglas fijas.",
+            "Prueba distintas formas frente al espejo y quédate con la combinación en la que te sientas cómoda."
+          ]
+        },
+        {
+          "heading": "Usa el color para dar intención",
+          "paragraphs": [
+            "Los tonos neutros facilitan crear conjuntos que puedas repetir de distintas maneras. Un top de color puede convertirse en el punto protagonista si lo acompañas con jeans y accesorios más discretos.",
+            "También puedes repetir un tono del top en el bolso o en otro detalle para dar continuidad al conjunto."
+          ]
+        },
+        {
+          "heading": "Cambia el resultado con accesorios",
+          "paragraphs": [
+            "Un bolso, unos pendientes o una tercera pieza ligera pueden transformar una combinación básica. Elige uno o dos detalles que acompañen el estilo que buscas y evita añadir elementos solo por llenar el conjunto."
+          ]
+        }
+      ],
+      "links": [
+        {
+          "label": "Explorar tops",
+          "href": "/categoria/tops/"
+        },
+        {
+          "label": "Ver jeans",
+          "href": "/categoria/jeans/"
+        },
+        {
+          "label": "Descubrir bolsos",
+          "href": "/categoria/bolsos/"
+        }
+      ]
+    },
+    {
+      "slug": "prendas-basicas-armario-mujer",
+      "path": "guia/prendas-basicas-armario-mujer",
+      "kind": "article",
+      "title": "Prendas versátiles para un armario femenino | LIBRE femme",
+      "h1": "Prendas versátiles para un armario femenino",
+      "description": "Ideas para construir un armario práctico con prendas que puedas combinar de distintas maneras y adaptar a tu estilo.",
+      "intro": "Un armario versátil no necesita estar lleno. Puede empezar con prendas que te gusten, que combinen entre sí y que puedas adaptar a diferentes momentos. La mejor selección es la que responde a tu vida y a tu personalidad.",
+      "sections": [
+        {
+          "heading": "Elige piezas que puedas combinar",
+          "paragraphs": [
+            "Piensa en las prendas que más utilizas y en los colores que ya forman parte de tu armario. Un top sencillo, unos jeans que te sienten bien o un vestido que puedas llevar de distintas formas pueden servir como punto de partida.",
+            "Antes de añadir una pieza, imagina al menos dos o tres combinaciones con lo que ya tienes."
+          ]
+        },
+        {
+          "heading": "Añade variedad con conjuntos y capas",
+          "paragraphs": [
+            "Los conjuntos ayudan cuando quieres una combinación coordinada; las prendas separadas permiten crear más posibilidades. Alternar ambas opciones aporta variedad sin complicar las decisiones de cada día.",
+            "Una capa ligera puede cambiar la sensación de un look y ayudarte a adaptar una misma base."
+          ]
+        },
+        {
+          "heading": "Deja espacio para tu personalidad",
+          "paragraphs": [
+            "Los básicos no tienen que ser aburridos ni iguales para todo el mundo. Elige texturas, formas y detalles que realmente te representen. Un accesorio o un color especial puede hacer que una combinación sencilla se sienta propia."
+          ]
+        }
+      ],
+      "links": [
+        {
+          "label": "Explorar conjuntos",
+          "href": "/categoria/conjuntos/"
+        },
+        {
+          "label": "Ver tops",
+          "href": "/categoria/tops/"
+        },
+        {
+          "label": "Descubrir vestidos",
+          "href": "/categoria/vestidos/"
+        }
+      ]
+    },
+    {
+      "slug": "como-comprar-en-libre-femme",
+      "path": "guia/como-comprar-en-libre-femme",
+      "kind": "trust",
+      "title": "Cómo comprar en LIBRE femme | Catálogo y WhatsApp",
+      "h1": "Cómo comprar en LIBRE femme",
+      "description": "Conoce cómo consultar las prendas de LIBRE femme, elegir variantes y confirmar tu pedido por WhatsApp.",
+      "intro": "LIBRE femme funciona como un catálogo de moda femenina. Puedes explorar las prendas publicadas, consultar sus variantes y enviarnos tu selección por WhatsApp para confirmar los detalles.",
+      "sections": [
+        {
+          "heading": "1. Explora la colección",
+          "paragraphs": [
+            "Recorre el catálogo o utiliza las categorías para encontrar vestidos, tops, bolsos, conjuntos, abrigos, jeans y accesorios. Cada ficha muestra la información disponible de la prenda."
+          ]
+        },
+        {
+          "heading": "2. Elige las opciones disponibles",
+          "paragraphs": [
+            "Cuando una pieza tenga tallas o colores registrados, selecciona la variante que prefieras. La disponibilidad que aparece en el catálogo es orientativa y se confirma al atender tu consulta."
+          ]
+        },
+        {
+          "heading": "3. Envía tu selección por WhatsApp",
+          "paragraphs": [
+            "Añade las piezas a tu bolsa y utiliza el botón para abrir WhatsApp con el resumen de tu selección. En la conversación podremos confirmar disponibilidad, entrega y los detalles finales antes de cerrar el pedido.",
+            "Añadir una pieza a la bolsa o abrir WhatsApp no reserva existencias ni confirma una compra."
+          ]
+        }
+      ],
+      "links": [
+        {
+          "label": "Explorar toda la colección",
+          "href": "/#coleccion"
+        },
+        {
+          "label": "Consultar por WhatsApp",
+          "href": "https://wa.me/5358352149"
+        }
+      ]
+    }
+  ]
+}
