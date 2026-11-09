@@ -47,26 +47,52 @@ function formatPrice(price: number) {
 
 type SeoPage = typeof seoContent.pages[number]
 
-function EditorialPage({ page }: { page: SeoPage }) {
+function EditorialPage({ page, featuredProduct }: { page: SeoPage; featuredProduct?: Product }) {
+  const featuredImage = featuredProduct?.images[0]
   return <div className="seo-editorial-page">
-    <header className="seo-editorial-header">
+    <header className="seo-editorial-nav">
       <a className="wordmark" href="/">LIBRE <span>femme</span></a>
-      <p className="eyebrow">LIBRE FEMME · MODA FEMENINA</p>
-      <h1>{page.h1}</h1>
-      <p>{page.intro}</p>
+      <a href="/#coleccion">LA COLECCIÓN <span>↗</span></a>
     </header>
-    <main className="seo-editorial-content">
-      <nav aria-label="Ruta de navegación"><a href="/">Inicio</a> / {page.h1}</nav>
-      {page.sections.map((section) => <section key={section.heading}>
-        <h2>{section.heading}</h2>
-        {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-      </section>)}
-      <section className="seo-editorial-links">
-        <h2>Continúa explorando</h2>
-        <ul>{page.links.map((link) => <li key={link.href}><a href={link.href}>{link.label} ↗</a></li>)}</ul>
+    <main>
+      <section className="seo-editorial-hero">
+        <div className="seo-editorial-hero-copy">
+          <p className="eyebrow">LIBRE FEMME <span>·</span> INSPIRACIÓN Y ESTILO</p>
+          <p className="seo-editorial-kicker">UNA MIRADA A TU MANERA DE VESTIR</p>
+          <h1>{page.h1}</h1>
+          <p className="seo-editorial-intro">{page.intro}</p>
+          <a className="seo-editorial-cta" href={page.links[0]?.href || '/#coleccion'}>{page.links[0]?.label || 'Explorar colección'} <span>↗</span></a>
+          <span className="seo-editorial-index">ESTILO LIBRE — 01 / 04</span>
+        </div>
+        <div className="seo-editorial-hero-visual">
+          {featuredImage
+            ? <img src={featuredImage.url} alt={featuredImage.alt || featuredProduct?.name || page.h1} />
+            : <div className="seo-editorial-art" aria-hidden="true"><span>LIBRE</span><i>femme</i><b>01</b></div>}
+          <p>{featuredProduct?.name || 'Piezas elegidas para acompañarte'}</p>
+        </div>
       </section>
-      <a className="seo-back-link" href="/">Volver a LIBRE femme</a>
+      <section className="seo-editorial-story">
+        <div className="seo-editorial-story-aside">
+          <p className="eyebrow">EL ESTILO ESTÁ EN LOS DETALLES</p>
+          <span>LIBRE<br/>FEMME</span>
+        </div>
+        <div className="seo-editorial-sections">
+          {page.sections.map((section, index) => <article className="seo-editorial-section" key={section.heading}>
+            <span className="seo-editorial-number">0{index + 1}</span>
+            <div><h2>{section.heading}</h2>
+              {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            </div>
+          </article>)}
+        </div>
+      </section>
+      <section className="seo-editorial-discover">
+        <div><p className="eyebrow">ENCUENTRA TU PRÓXIMA PIEZA</p><h2>Elige lo que <em>habla de ti.</em></h2></div>
+        <div className="seo-editorial-discover-links">
+          {page.links.map((link, index) => <a key={link.href} href={link.href}><span>0{index + 1}</span>{link.label}<b>↗</b></a>)}
+        </div>
+      </section>
     </main>
+    <footer className="seo-editorial-footer"><a className="wordmark" href="/">LIBRE <span>femme</span></a><p>Prendas que hablan de ti. Texturas, formas y detalles elegidos para acompañarte a tu manera.</p><a href="/#coleccion">DESCUBRIR LA COLECCIÓN ↗</a></footer>
   </div>
 }
 
@@ -328,7 +354,7 @@ function App() {
   ].filter((line, index, lines) => line !== '' || (index > 0 && lines[index - 1] !== '')).join('\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
-  if (editorialPage) return <EditorialPage page={editorialPage} />
+  if (editorialPage) {\n    const preferredCategory = editorialPage.slug.includes('bolso') ? 'Bolsos' : editorialPage.slug.includes('tops') ? 'Tops' : editorialPage.slug.includes('comprar') ? '' : 'Conjuntos'\n    const featuredProduct = products.find((product) => preferredCategory && product.category.toLocaleLowerCase('es') === preferredCategory.toLocaleLowerCase('es') && product.images[0]) || products.find((product) => product.images[0])\n    return <EditorialPage page={editorialPage} featuredProduct={featuredProduct} />\n  }
 
   return (
     <div className="storefront">
