@@ -1,6 +1,6 @@
 # Mapa de búsqueda orgánica — LIBRE femme
 
-Objetivo: captar búsquedas relevantes de moda femenina en Cuba y convertirlas en visitas al catálogo y consultas por WhatsApp. La página debe responder a una intención clara; no se deben repetir palabras clave artificialmente.
+Objetivo: captar búsquedas relevantes de moda femenina en Cuba y convertirlas en visitas al catálogo y consultas por WhatsApp. La página debe responder a una intención clara; no se deben repetir palabras clave artificialmente. Este primer mapa es una hipótesis editorial basada en el catálogo y el mercado objetivo; se ajustará con las consultas reales que aparezcan en Search Console.
 
 ## Páginas principales
 
