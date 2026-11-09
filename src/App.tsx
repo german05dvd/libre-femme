@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+import seoContent from '../content/seo-pages.json'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 
 type Variant = {
@@ -44,10 +45,37 @@ function formatPrice(price: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(price)
 }
 
+type SeoPage = typeof seoContent.pages[number]
+
+function EditorialPage({ page }: { page: SeoPage }) {
+  return <div className="seo-editorial-page">
+    <header className="seo-editorial-header">
+      <a className="wordmark" href="/">LIBRE <span>femme</span></a>
+      <p className="eyebrow">LIBRE FEMME · MODA FEMENINA</p>
+      <h1>{page.h1}</h1>
+      <p>{page.intro}</p>
+    </header>
+    <main className="seo-editorial-content">
+      <nav aria-label="Ruta de navegación"><a href="/">Inicio</a> / {page.h1}</nav>
+      {page.sections.map((section) => <section key={section.heading}>
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+      </section>)}
+      <section className="seo-editorial-links">
+        <h2>Continúa explorando</h2>
+        <ul>{page.links.map((link) => <li key={link.href}><a href={link.href}>{link.label} ↗</a></li>)}</ul>
+      </section>
+      <a className="seo-back-link" href="/">Volver a LIBRE femme</a>
+    </main>
+  </div>
+}
+
 function App() {
   const [products, setProducts] = useState<Product[]>([])
   const categoryPath = window.location.pathname.match(/^\/categoria\/([^/]+)\/?$/)?.[1] ?? null
   const productPath = window.location.pathname.match(/^\/producto\/([^/]+)\/?$/)?.[1] ?? null
+  const guidePath = window.location.pathname.match(/^\/guia\/([^/]+)\/?$/)?.[1] ?? null
+  const editorialPage = seoContent.pages.find((page) => page.slug === guidePath) ?? null
   const [activeCategory, setActiveCategory] = useState('Todo')
   const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState<Record<string, number>>({})
@@ -160,25 +188,31 @@ function App() {
   useEffect(() => {
     const title = selectedProduct
       ? selectedProduct.name + ' | LIBRE femme · ' + selectedProduct.category + ' en Cuba'
-      : categoryLanding
-        ? categoryLanding + ' para mujer en Cuba | LIBRE femme'
-        : 'Tienda de ropa para mujer en Cuba | LIBRE femme'
+      : editorialPage
+        ? editorialPage.title
+        : categoryLanding
+          ? categoryLanding + ' para mujer en Cuba | LIBRE femme'
+          : 'Tienda de ropa para mujer en Cuba | LIBRE femme'
     const description = selectedProduct
       ? (selectedProduct.description || selectedProduct.name) + ' Consulta tallas, colores y disponibilidad por WhatsApp.'
-      : categoryLanding
-        ? 'Descubre nuestra selección de ' + categoryLanding.toLocaleLowerCase('es') + ' para mujer en Cuba en LIBRE femme.'
-        : 'Tienda de moda femenina en Cuba. Descubre ropa para mujer, vestidos, tops, conjuntos, bolsos y accesorios en LIBRE femme.'
+      : editorialPage
+        ? editorialPage.description
+        : categoryLanding
+          ? 'Descubre nuestra selección de ' + categoryLanding.toLocaleLowerCase('es') + ' para mujer en Cuba en LIBRE femme.'
+          : 'Tienda de moda femenina en Cuba. Descubre ropa para mujer, vestidos, tops, conjuntos, bolsos y accesorios en LIBRE femme.'
     document.title = title
     const descriptionTag = document.querySelector('meta[name="description"]')
     if (descriptionTag) descriptionTag.setAttribute('content', description.slice(0, 155))
     const canonical = selectedProduct
       ? '/producto/' + slugifyCategory(selectedProduct.slug) + '/'
-      : categoryLanding && categoryPath
-        ? '/categoria/' + categoryPath + '/'
-        : '/'
+      : editorialPage
+        ? '/' + editorialPage.path + '/'
+        : categoryLanding && categoryPath
+          ? '/categoria/' + categoryPath + '/'
+          : '/'
     const canonicalTag = document.querySelector('link[rel="canonical"]')
     if (canonicalTag) canonicalTag.setAttribute('href', window.location.origin + canonical)
-  }, [selectedProduct, categoryLanding, categoryPath])
+  }, [selectedProduct, editorialPage, categoryLanding, categoryPath])
   const visibleProducts = useMemo(
     () => products.filter((product) => (activeCategory === 'Todo' || product.category === activeCategory) && `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('es').includes(searchTerm.trim().toLocaleLowerCase('es'))),
     [products, activeCategory, searchTerm],
@@ -275,6 +309,8 @@ function App() {
   ].filter((line, index, lines) => line !== '' || (index > 0 && lines[index - 1] !== '')).join('\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
+  if (editorialPage) return <EditorialPage page={editorialPage} />
+
   return (
     <div className="storefront">
       <div className="sr-only" role="status" aria-live="polite">{cartNotice}</div>
@@ -350,6 +386,12 @@ function App() {
           </div>}
           {!loading && !catalogError && visibleProducts.length === 0 && <div className="no-results"><span>✳</span><h3>{products.length ? 'No encontramos esa pieza.' : 'Pronto habrá piezas para descubrir.'}</h3><p>{products.length ? 'Prueba con otro nombre o cambia los filtros.' : 'Cuando se publiquen productos en el panel de administración, aparecerán aquí.'}</p>{products.length > 0 && <button className="text-link" type="button" onClick={() => { setSearchTerm(''); setActiveCategory('Todo') }}>Limpiar búsqueda</button>}</div>}
           <p className="demo-note">{isSupabaseConfigured ? 'Precios y variantes proceden del catálogo publicado. La disponibilidad de existencias y la entrega se confirman por WhatsApp.' : 'La tienda está pendiente de configuración con Supabase; no se muestran productos ni precios de demostración.'}</p>
+        </section>
+
+        <section className="seo-guides-section" aria-labelledby="seo-guides-title">
+          <div className="seo-guides-heading"><p className="eyebrow">INSPIRACIÓN LIBRE</p><h2 id="seo-guides-title">Ideas para vestir <em>a tu manera.</em></h2><p>Consejos sencillos para combinar prendas, explorar estilos y elegir lo que habla de ti.</p></div>
+          <div className="seo-guides-grid">{seoContent.pages.filter((page) => page.kind === 'article').map((page) => <article className="seo-guide-card" key={page.slug}><p className="eyebrow">GUÍA DE ESTILO</p><h3><a href={'/' + page.path + '/'}>{page.h1}</a></h3><p>{page.description}</p><a className="seo-guide-link" href={'/' + page.path + '/'}>Leer guía ↗</a></article>)}</div>
+          <a className="seo-how-to-buy" href="/guia/como-comprar-en-libre-femme/">Cómo comprar en LIBRE femme ↗</a>
         </section>
 
         <section className="details-editorial" id="detalles">
