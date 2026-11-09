@@ -354,7 +354,11 @@ function App() {
   ].filter((line, index, lines) => line !== '' || (index > 0 && lines[index - 1] !== '')).join('\n')
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
-  if (editorialPage) {\n    const preferredCategory = editorialPage.slug.includes('bolso') ? 'Bolsos' : editorialPage.slug.includes('tops') ? 'Tops' : editorialPage.slug.includes('comprar') ? '' : 'Conjuntos'\n    const featuredProduct = products.find((product) => preferredCategory && product.category.toLocaleLowerCase('es') === preferredCategory.toLocaleLowerCase('es') && product.images[0]) || products.find((product) => product.images[0])\n    return <EditorialPage page={editorialPage} featuredProduct={featuredProduct} />\n  }
+  if (editorialPage) {
+    const preferredCategory = editorialPage.slug.includes('bolso') ? 'Bolsos' : editorialPage.slug.includes('tops') ? 'Tops' : editorialPage.slug.includes('comprar') ? '' : 'Conjuntos'
+    const featuredProduct = products.find((product) => preferredCategory && product.category.toLocaleLowerCase('es') === preferredCategory.toLocaleLowerCase('es') && product.images[0]) || products.find((product) => product.images[0])
+    return <EditorialPage page={editorialPage} featuredProduct={featuredProduct} />
+  }
 
   return (
     <div className="storefront">
