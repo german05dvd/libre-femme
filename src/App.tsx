@@ -430,7 +430,7 @@ function App() {
         const imageIndex = (selectedProductImages[selectedProduct.id] ?? 0) % Math.max(gallery.length, 1)
         const currentImage = gallery[imageIndex]
         const sizes = [...new Set(selectedProduct.variants.map(item => item.size).filter(Boolean))]
-        const colors = [...new Set(selectedProduct.variants.map(item => item.color).filter(Boolean))]
+        const colors = [...new Set(selectedProduct.variants.map(item => item.color).filter((color): color is string => Boolean(color)))]
         return <div className="product-modal-backdrop" role="presentation" onClick={closeProduct}>
           <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={event => event.stopPropagation()}>
             <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
