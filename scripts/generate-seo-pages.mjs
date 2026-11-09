@@ -66,8 +66,49 @@ function publicImageUrl(path) {
 async function main() {
   const distIndexPath = join(process.cwd(), 'dist', 'index.html')
   const baseHtml = await readFile(distIndexPath, 'utf8')
+  const editorialContent = JSON.parse(await readFile(join(process.cwd(), 'content', 'seo-pages.json'), 'utf8'))
+  const sitemapUrls = [siteUrl + '/']
+
+  for (const page of editorialContent.pages) {
+    const canonical = siteUrl + '/' + page.path.replace(/^\\/+|\\/+$/g, '') + '/'
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': page.kind === 'article' ? 'Article' : 'WebPage',
+      headline: page.h1,
+      name: page.title,
+      description: page.description,
+      inLanguage: 'es',
+      mainEntityOfPage: canonical,
+      author: { '@type': 'Organization', name: 'LIBRE femme', url: siteUrl + '/' },
+      publisher: { '@type': 'Organization', name: 'LIBRE femme', url: siteUrl + '/' },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl + '/' },
+          { '@type': 'ListItem', position: 2, name: page.h1, item: canonical },
+        ],
+      },
+    }
+    const sections = page.sections.map((section) =>
+      '<section><h2>' + escapeHtml(section.heading) + '</h2>' +
+      section.paragraphs.map((paragraph) => '<p>' + escapeHtml(paragraph) + '</p>').join('') + '</section>'
+    ).join('')
+    const links = page.links.map((link) => '<li><a href="' + escapeHtml(link.href) + '">' + escapeHtml(link.label) + '</a></li>').join('')
+    const fallback = '<main lang="es"><nav aria-label="Ruta de navegación"><a href="/">LIBRE femme</a> / ' + escapeHtml(page.h1) + '</nav>' +
+      '<article><p>LIBRE FEMME · MODA FEMENINA</p><h1>' + escapeHtml(page.h1) + '</h1><p>' + escapeHtml(page.intro) + '</p>' +
+      sections + '<nav aria-label="Explorar más"><h2>Continúa explorando</h2><ul>' + links + '</ul></nav></article></main>'
+    const html = injectPage(baseHtml, page.title, page.description, canonical, structuredData, fallback)
+    const outputPath = join(process.cwd(), 'dist', page.path, 'index.html')
+    await mkdir(dirname(outputPath), { recursive: true })
+    await writeFile(outputPath, html)
+    sitemapUrls.push(canonical)
+  }
+
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Skipping SEO page generation: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required in the production build environment.')
+    const sitemap = '<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\\n' +
+      sitemapUrls.map((url) => '  <url><loc>' + url + '</loc></url>').join('\\n') + '\\n</urlset>\\n'
+    await writeFile(join(process.cwd(), 'dist', 'sitemap.xml'), sitemap)
+    console.warn('Generated editorial SEO pages only. VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required for dynamic catalog pages.')
     return
   }
 
@@ -94,7 +135,6 @@ async function main() {
     categories.get(slug).products.push(product)
   }
 
-  const sitemapUrls = [siteUrl + '/']
   for (const [slug, category] of categories) {
     const canonical = siteUrl + '/categoria/' + slug + '/'
     sitemapUrls.push(canonical)
