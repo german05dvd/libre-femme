@@ -1564,3 +1564,10 @@ html { scroll-padding-top: 24px; }
  .seo-editorial-content h2 { font-size:25px; }
  .seo-editorial-content p { font-size:13px; }
 }
+
+.category-seo-faq { max-width:850px; margin:65px auto 0; padding-top:28px; border-top:1px solid var(--line); }
+.category-seo-faq .eyebrow { margin-bottom:10px; }
+.category-seo-faq h2 { margin:0 0 20px; color:var(--chocolate); font-family:var(--serif); font-size:clamp(30px,3vw,40px); font-weight:400; }
+.category-seo-faq details { padding:15px 0; border-bottom:1px solid var(--line); }
+.category-seo-faq summary { color:var(--chocolate); font-size:12px; cursor:pointer; }
+.category-seo-faq details p { max-width:680px; margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.8; }
