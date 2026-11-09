@@ -1516,3 +1516,8 @@ html { scroll-padding-top: 24px; }
 @media(prefers-reduced-motion:reduce) {
  .hero-section.hero-editorial .hero-gallery,.hero-section.hero-editorial .hero-photo-main img,.hero-section.hero-editorial .hero-photo-detail { animation:none!important; }
 }
+
+
+/* SEO: product names remain clear, crawlable links to their own detail pages. */
+.product-title-link { color:inherit; text-decoration:none; }
+.product-title-link:hover,.product-title-link:focus-visible { text-decoration:underline; text-decoration-color:var(--clay); text-underline-offset:4px; }
