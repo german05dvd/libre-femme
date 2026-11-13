@@ -114,6 +114,7 @@ function App() {
   const [catalogError, setCatalogError] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const galleryTouchStart = useRef<number | null>(null)
+  const productReturnPath = useRef('/')
 
   useEffect(() => {
     let cancelled = false
@@ -272,19 +273,29 @@ function App() {
   const cartTotal = cartItems.reduce((sum, item) => sum + item.variant.sale_price * item.quantity, 0)
 
   const openProduct = (product: Product) => {
-    window.history.pushState({}, '', '/producto/' + slugifyCategory(product.slug) + '/')
+    if (!window.location.pathname.startsWith('/producto/')) {
+      productReturnPath.current = window.location.pathname + window.location.search + window.location.hash
+    }
+    window.history.pushState({ productModal: true }, '', '/producto/' + slugifyCategory(product.slug) + '/')
     setSelectedProduct(product)
   }
 
   const closeProduct = () => {
+    if (window.location.pathname.startsWith('/producto/')) {
+      window.history.replaceState({}, '', productReturnPath.current || '/')
+    }
     setSelectedProduct(null)
-    if (window.location.pathname.startsWith('/producto/')) window.history.pushState({}, '', '/')
   }
 
   useEffect(() => {
     const syncProductRoute = () => {
       const slug = window.location.pathname.match(/^\/producto\/([^/]+)\/?$/)?.[1] ?? null
       setSelectedProduct(slug ? products.find((product) => slugifyCategory(product.slug) === slug) ?? null : null)
+      if (!slug) {
+        const category = window.location.pathname.match(/^\\/categoria\\/([^/]+)\\/?$/)?.[1]
+        const categoryName = category ? products.find((product) => slugifyCategory(product.category) === category)?.category : null
+        setActiveCategory(categoryName ?? 'Todo')
+      }
     }
     window.addEventListener('popstate', syncProductRoute)
     return () => window.removeEventListener('popstate', syncProductRoute)
@@ -292,7 +303,7 @@ function App() {
 
   useEffect(() => {
     if (!selectedProduct) return
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') { setSelectedProduct(null); if (window.location.pathname.startsWith('/producto/')) window.history.pushState({}, '', '/') } }
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeProduct() }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedProduct])
@@ -370,7 +381,7 @@ function App() {
         <a className="wordmark" href="#inicio" aria-label="LIBRE femme, inicio">LIBRE <span>femme</span></a>
         <nav className={mobileMenuOpen ? 'main-nav is-open' : 'main-nav'} aria-label="Navegación principal">
           <a href="#coleccion" onClick={() => setMobileMenuOpen(false)}>Colección</a>
-          <a href="#detalles" onClick={() => setMobileMenuOpen(false)}>Detalles</a>
+          <a href="/#inspiracion" onClick={() => setMobileMenuOpen(false)}>Detalles</a>
         </nav>
         <button className="cart-trigger" type="button" onClick={() => setCartOpen(true)} aria-label={`Abrir bolsa, ${cartCount} artículos`}>Bolsa <span className="cart-count">{cartCount}</span></button>
       </header>
@@ -440,7 +451,7 @@ function App() {
           <details><summary>¿Puedo elegir talla o color?</summary><p>Cuando una prenda tiene variantes publicadas, puedes seleccionar las opciones disponibles en su ficha. Los detalles se confirman por WhatsApp.</p></details>
         </section>}
 
-        <section className="seo-guides-section" aria-labelledby="seo-guides-title">
+        <section className="seo-guides-section" id="inspiracion" aria-labelledby="seo-guides-title">
           <div className="seo-guides-heading"><p className="eyebrow">INSPIRACIÓN LIBRE</p><h2 id="seo-guides-title">Ideas para vestir <em>a tu manera.</em></h2><p>Consejos sencillos para combinar prendas, explorar estilos y elegir lo que habla de ti.</p></div>
           <div className="seo-guides-grid">{seoContent.pages.filter((page) => page.kind === 'article').map((page) => <article className="seo-guide-card" key={page.slug}><p className="eyebrow">GUÍA DE ESTILO</p><h3><a href={'/' + page.path + '/'}>{page.h1}</a></h3><p>{page.description}</p><a className="seo-guide-link" href={'/' + page.path + '/'}>Leer guía ↗</a></article>)}</div>
           <a className="seo-how-to-buy" href="/guia/como-comprar-en-libre-femme/">Cómo comprar en LIBRE femme ↗</a>
@@ -463,7 +474,7 @@ function App() {
         const colors = [...new Set(selectedProduct.variants.map(item => item.color).filter((color): color is string => Boolean(color)))]
         return <div className="product-modal-backdrop" role="presentation" onClick={closeProduct}>
           <section className="product-modal" role="dialog" aria-modal="true" aria-label={selectedProduct.name} onClick={event => event.stopPropagation()}>
-            <button className="product-modal-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Cerrar detalles">×</button>
+            <button className="product-modal-close" type="button" onClick={closeProduct} aria-label="Cerrar detalles">×</button>
             <div className="product-modal-image"
               onTouchStart={(event) => { galleryTouchStart.current = event.touches[0]?.clientX ?? null }}
               onTouchEnd={(event) => {
