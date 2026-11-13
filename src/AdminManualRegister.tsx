@@ -80,7 +80,7 @@ export default function AdminManualRegister() {
     if (type === 'purchase' && (batchCost === '' || !Number.isFinite(Number(batchCost)) || Number(batchCost) < 0)) {
       setError('Indica el coste total de la caja o lote, incluyendo compra y transporte hasta Cuba.'); return
     }
-    if (type === 'sale' && lines.some(l => l.salePrice === '' || !Number.isFinite(Number(l.salePrice)) || Number(l.salePrice) < 0)) {
+    if (type === 'sale' && entryLines.some(l => l.salePrice === '' || !Number.isFinite(Number(l.salePrice)) || Number(l.salePrice) < 0)) {
       setError('Indica el precio unitario real de venta de cada línea.'); return
     }
     const occurredDate = new Date(occurredAt)
