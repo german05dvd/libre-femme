@@ -292,7 +292,7 @@ function App() {
       const slug = window.location.pathname.match(/^\/producto\/([^/]+)\/?$/)?.[1] ?? null
       setSelectedProduct(slug ? products.find((product) => slugifyCategory(product.slug) === slug) ?? null : null)
       if (!slug) {
-        const category = window.location.pathname.match(/^\\/categoria\\/([^/]+)\\/?$/)?.[1]
+        const category = window.location.pathname.match(/^\/categoria\/([^/]+)\/?$/)?.[1]
         const categoryName = category ? products.find((product) => slugifyCategory(product.category) === category)?.category : null
         setActiveCategory(categoryName ?? 'Todo')
       }
