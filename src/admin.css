@@ -499,3 +499,25 @@
   outline: 2px solid #b17b61;
   outline-offset: 2px;
 }
+
+
+/* Purchase entry: keep the add action directly after the last product row. */
+.admin-add-register-line {
+  justify-self: start;
+  margin: 0 0 18px;
+  border-color: #b9a392;
+  background: #f7f1eb;
+  color: #4b3328;
+}
+.admin-add-register-line:hover:not(:disabled) {
+  border-color: #8e6650;
+  background: #efe4d9;
+}
+.admin-register-line .admin-footnote {
+  margin: 7px 0 0;
+  line-height: 1.5;
+}
+@media (max-width: 700px) {
+  .admin-add-register-line { width: 100%; justify-content: center; }
+  .admin-register-line { gap: 10px; }
+}
