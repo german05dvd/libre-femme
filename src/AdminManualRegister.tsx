@@ -63,11 +63,19 @@ export default function AdminManualRegister() {
   async function submitEntry() {
     if (!supabase) return
     setError(''); setNotice('')
-    if (lines.some(l => !l.variantId || !Number.isInteger(Number(l.quantity)) || Number(l.quantity) < 1)) {
-      setError('Selecciona una variante y una cantidad entera positiva para cada línea.'); return
+    // A newly added, untouched row is only a convenience for the next item.
+    // It must not block saving the already completed purchase.
+    const entryLines = lines.filter(line =>
+      line.variantId !== '' || line.quantity !== '1' || line.cost !== '' || line.salePrice !== ''
+    )
+    if (entryLines.length === 0) {
+      setError('Añade al menos un producto antes de confirmar la operación.'); return
     }
-    if (new Set(lines.map(l => l.variantId)).size !== lines.length) {
-      setError('No repitas una variante en varias líneas: agrupa su cantidad en una sola línea y usa el coste unitario correspondiente.'); return
+    if (entryLines.some(l => !l.variantId || !Number.isInteger(Number(l.quantity)) || Number(l.quantity) < 1)) {
+      setError('Revisa las líneas: cada producto añadido necesita una variante y una cantidad entera positiva.'); return
+    }
+    if (new Set(entryLines.map(l => l.variantId)).size !== entryLines.length) {
+      setError('No repitas una variante en varias líneas: agrupa su cantidad en una sola línea.'); return
     }
     if (type === 'purchase' && (batchCost === '' || !Number.isFinite(Number(batchCost)) || Number(batchCost) < 0)) {
       setError('Indica el coste total de la caja o lote, incluyendo compra y transporte hasta Cuba.'); return
@@ -93,9 +101,9 @@ export default function AdminManualRegister() {
       if (entryError || !entry) {
         throw new Error('No se pudo crear el registro: ' + (entryError?.message ?? 'respuesta vacía'))
       }
-      const totalUnits = lines.reduce((sum, line) => sum + Number(line.quantity), 0)
+      const totalUnits = entryLines.reduce((sum, line) => sum + Number(line.quantity), 0)
       const averageLandedCost = type === 'purchase' && totalUnits > 0 ? Number(batchCost) / totalUnits : 0
-      const rows = lines.map(line => ({
+      const rows = entryLines.map(line => ({
         entry_id: entry.id, variant_id: line.variantId, quantity: Number(line.quantity),
         unit_cost_usd: type === 'purchase' ? averageLandedCost : 0,
         unit_sale_price_usd: type === 'sale' ? Number(line.salePrice) : 0,
@@ -120,7 +128,10 @@ export default function AdminManualRegister() {
     }
   }
 
-  const total = type === 'purchase' ? Number(batchCost || 0) : lines.reduce((sum, line) => sum + Number(line.quantity || 0) * Number(line.salePrice || 0), 0)
+  const filledLines = lines.filter(line => line.variantId !== '')
+  const totalUnits = filledLines.reduce((sum, line) => sum + (Number.isInteger(Number(line.quantity)) && Number(line.quantity) > 0 ? Number(line.quantity) : 0), 0)
+  const estimatedUnitCost = type === 'purchase' && totalUnits > 0 ? Number(batchCost || 0) / totalUnits : 0
+  const total = type === 'purchase' ? Number(batchCost || 0) : filledLines.reduce((sum, line) => sum + Number(line.quantity || 0) * Number(line.salePrice || 0), 0)
   return <section className="admin-section" aria-labelledby="manual-register-title">
     <div className="admin-section-heading"><div><p className="admin-kicker">OPERACIONES REALES</p><h2 id="manual-register-title">Registro de movimientos</h2></div></div>
     <p className="admin-footnote">Cada operación se registra una sola vez. En una compra puedes detallar las prendas para inventario y registrar un único coste total del lote; el sistema reparte ese coste por unidad para calcular el coste de lo vendido. La bolsa de WhatsApp no reserva ni descuenta stock.</p>
@@ -132,17 +143,18 @@ export default function AdminManualRegister() {
       <label>Referencia (opcional)<input value={reference} onChange={e => setReference(e.target.value)} placeholder="Factura, recibo o nota" /></label>
       <label>Notas (opcional)<input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Proveedor, cliente o detalle" /></label>
     </div>
-    <div className="admin-section-heading"><div><p className="admin-kicker">LÍNEAS DE LA OPERACIÓN</p><h3>Productos y variantes</h3></div><button className="admin-secondary" type="button" onClick={addLine}>Añadir producto</button></div>
+    <div className="admin-section-heading"><div><p className="admin-kicker">LÍNEAS DE LA OPERACIÓN</p><h3>Productos y variantes</h3><p className="admin-footnote">Añade cada variante que llegó en esta compra y la cantidad recibida.</p></div></div>
     <div className="admin-register-lines">
       {lines.map((line, index) => <article className="admin-register-line" key={index}>
         <label>Producto / variante<select value={line.variantId} onChange={e => updateLine(index, { variantId: e.target.value, salePrice: variants.find(v => v.id === e.target.value)?.sale_price.toString() ?? line.salePrice })} required>
           <option value="">Seleccionar variante…</option>{variants.map(v => <option key={v.id} value={v.id}>{v.product?.name ?? 'Producto'} · {v.sku}{v.size ? ' · Talla ' + v.size : ''}{v.color ? ' · ' + v.color : ''}</option>)}
         </select></label>
         <label>Cantidad<input type="number" min="1" step="1" value={line.quantity} onChange={e => updateLine(index, { quantity: e.target.value })} required /></label>
-        {type === 'purchase' ? <div><span className="admin-field-label">Coste unitario estimado</span><p className="admin-footnote">Se reparte el coste total entre las {lines.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} unidades del lote.</p></div> : <label>Precio de venta (USD)<input type="number" min="0" step="0.01" value={line.salePrice} onChange={e => updateLine(index, { salePrice: e.target.value })} required /></label>}
+        {type === 'purchase' ? <div><span className="admin-field-label">Coste unitario estimado</span><p className="admin-footnote">{line.variantId && totalUnits > 0 ? `${money(estimatedUnitCost)} por unidad · reparto entre ${totalUnits} unidades` : 'Se calculará al indicar el coste del lote y las cantidades.'}</p></div> : <label>Precio de venta (USD)<input type="number" min="0" step="0.01" value={line.salePrice} onChange={e => updateLine(index, { salePrice: e.target.value })} required /></label>}
         <button className="admin-secondary admin-danger-action" type="button" disabled={lines.length === 1} onClick={() => removeLine(index)}>Quitar</button>
       </article>)}
     </div>
+    <button className="admin-secondary admin-add-register-line" type="button" onClick={addLine}>+ Añadir otro producto</button>
     <div className="admin-register-total"><span>Total declarado de la operación</span><strong>{money(total)}</strong></div>
     <button className="admin-submit" type="button" disabled={busy || variants.length === 0} onClick={() => void submitEntry()}>{busy ? 'Registrando…' : type === 'purchase' ? 'Confirmar entrada y actualizar stock' : 'Confirmar venta y descontar stock'} <span aria-hidden="true">↗</span></button>
     {variants.length === 0 && <p className="admin-empty">Primero crea al menos un producto con una variante activa.</p>}
