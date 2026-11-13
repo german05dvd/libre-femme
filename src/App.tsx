@@ -303,7 +303,7 @@ function App() {
 
   useEffect(() => {
     if (!selectedProduct) return
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeProduct() }
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') { if (window.location.pathname.startsWith('/producto/')) window.history.replaceState({}, '', productReturnPath.current || '/'); setSelectedProduct(null) } }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedProduct])
